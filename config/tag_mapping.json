@@ -1,0 +1,34 @@
+{
+  "highway=motorway": "asphalt",
+  "highway=motorway_link": "asphalt",
+  "highway=trunk": "asphalt",
+  "highway=trunk_link": "asphalt",
+  "highway=primary": "asphalt",
+  "highway=primary_link": "asphalt",
+  "highway=secondary": "asphalt",
+  "highway=secondary_link": "asphalt",
+  "highway=tertiary": "asphalt",
+  "highway=tertiary_link": "asphalt",
+  "highway=residential": "asphalt",
+  "highway=service": "asphalt",
+  "highway=unclassified": "asphalt",
+  "highway=track": "dirt",
+  "highway=path": "dirt",
+  "highway=footway": "concrete",
+  "highway=cycleway": "asphalt",
+  "surface=asphalt": "asphalt",
+  "surface=concrete": "concrete",
+  "surface=cobblestone": "cobblestone",
+  "surface=paving_stones": "cobblestone",
+  "surface=gravel": "gravel",
+  "surface=dirt": "dirt",
+  "surface=sand": "sand",
+  "surface=ice": "ice",
+  "surface=snow": "snow_packed",
+  "surface=compacted": "gravel"
+}
+
+
+
+
+

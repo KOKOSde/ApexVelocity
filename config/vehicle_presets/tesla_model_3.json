@@ -1,0 +1,18 @@
+{
+  "name": "Tesla Model 3",
+  "mass_kg": 1847,
+  "drag_coeff": 0.23,
+  "frontal_area_m2": 2.22,
+  "rolling_res_base": 0.012,
+  "max_lat_g": 0.95,
+  "max_brake_g": 1.0,
+  "max_power_w": 258000,
+  "powertrain_efficiency": 0.95,
+  "track_width_m": 1.58,
+  "cog_height_m": 0.45
+}
+
+
+
+
+

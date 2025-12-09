@@ -1,0 +1,64 @@
+[build-system]
+requires = ["scikit-build-core>=0.3.3", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "apexvelocity"
+version = "1.0.0"
+description = "Physics-Based Graph Annotation Engine for kinematic analysis"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "ApexVelocity Team"}
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+]
+rl = [
+    "gymnasium>=0.29.0",
+]
+osm = [
+    "osmnx>=1.6.0",
+    "pyproj>=3.6.0",
+]
+viz = [
+    "pydeck>=0.8.0",
+    "matplotlib>=3.7.0",
+]
+all = [
+    "gymnasium>=0.29.0",
+    "osmnx>=1.6.0",
+    "pyproj>=3.6.0",
+    "pydeck>=0.8.0",
+    "matplotlib>=3.7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/apexvelocity/apexvelocity"
+Documentation = "https://github.com/apexvelocity/apexvelocity#readme"
+
+[tool.scikit-build]
+cmake.source-dir = "../core"
+cmake.args = ["-DAPEXVELOCITY_BUILD_PYTHON=ON", "-DAPEXVELOCITY_BUILD_TESTS=OFF"]
+wheel.install-dir = "apexvelocity"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

@@ -1,0 +1,47 @@
+{
+  "asphalt": {
+    "mu_dry": 0.90,
+    "mu_wet": 0.60,
+    "rolling_resistance_coeff": 0.015
+  },
+  "concrete": {
+    "mu_dry": 0.85,
+    "mu_wet": 0.65,
+    "rolling_resistance_coeff": 0.014
+  },
+  "cobblestone": {
+    "mu_dry": 0.55,
+    "mu_wet": 0.40,
+    "rolling_resistance_coeff": 0.025
+  },
+  "gravel": {
+    "mu_dry": 0.60,
+    "mu_wet": 0.45,
+    "rolling_resistance_coeff": 0.020
+  },
+  "dirt": {
+    "mu_dry": 0.55,
+    "mu_wet": 0.35,
+    "rolling_resistance_coeff": 0.030
+  },
+  "sand": {
+    "mu_dry": 0.40,
+    "mu_wet": 0.30,
+    "rolling_resistance_coeff": 0.050
+  },
+  "ice": {
+    "mu_dry": 0.15,
+    "mu_wet": 0.10,
+    "rolling_resistance_coeff": 0.020
+  },
+  "snow_packed": {
+    "mu_dry": 0.25,
+    "mu_wet": 0.20,
+    "rolling_resistance_coeff": 0.030
+  }
+}
+
+
+
+
+

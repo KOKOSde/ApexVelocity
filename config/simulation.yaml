@@ -1,0 +1,17 @@
+# ApexVelocity Simulation Configuration
+# Default physics parameters for the Universe system
+
+gravity: 9.81                     # m/s^2 (Earth standard)
+air_density: 1.225                # kg/m^3 (sea level at 15°C)
+step_size_meters: 1.0             # sampling resolution along paths
+enable_rollover_checks: true      # enable vehicle rollover safety calculations
+global_friction_multiplier: 1.0   # multiplier for wet/ice scenarios (1.0 = dry conditions)
+
+# Advanced parameters
+max_velocity_cap: 83.33           # m/s (~300 km/h) - absolute velocity ceiling
+min_curvature_threshold: 1.0e-9   # 1/m - below this, treat as straight line
+
+
+
+
+
