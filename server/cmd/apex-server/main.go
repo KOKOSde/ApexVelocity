@@ -41,13 +41,15 @@ func main() {
 	}
 
 	// Create API handler
-	handler := api.NewHandler(*workers)
+	handler := api.NewHandler(*workers, *configDir)
 
 	// Setup router
 	r := chi.NewRouter()
 
 	// Middleware
 	r.Use(api.LoggingMiddleware)
+	r.Use(api.SecurityHeadersMiddleware)
+	r.Use(handler.AuthMiddleware())
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Timeout(60 * time.Second))
@@ -68,6 +70,7 @@ func main() {
 	r.Route("/v1", func(r chi.Router) {
 		r.Post("/config/reload", handler.HandleConfigReload)
 		r.Post("/analyze", handler.HandleAnalyze)
+		r.Get("/ratelimit", handler.HandleRateLimit)
 	})
 
 	// Start server
@@ -94,6 +97,7 @@ func main() {
 	log.Printf("  GET  /health           - Health check")
 	log.Printf("  POST /v1/config/reload - Reload configuration")
 	log.Printf("  POST /v1/analyze       - Analyze path velocity profile")
+	log.Printf("  GET  /v1/ratelimit     - Inspect rate limit configuration for current key")
 
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Server error: %v", err)

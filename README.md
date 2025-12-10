@@ -246,6 +246,45 @@ global_friction_multiplier: 1.0  # Reduce for wet/icy conditions
 }
 ```
 
+### HTTP API Authentication
+
+The Go HTTP server exposes the `/v1/analyze` endpoint for remote analysis. In production
+you should protect it with API keys and per-key rate limiting.
+
+- Configure keys in `config/auth.yaml`:
+
+  ```yaml
+  api_keys:
+    - name: "dev_key"
+      hash: "$2a$10$..."   # bcrypt hash of your dev API token
+      rate_limit: 100      # requests per minute
+
+    - name: "prod_key"
+      hash: "$2a$10$..."
+      rate_limit: 1000
+
+  admin_keys:
+    - name: "admin"
+      hash: "$2a$10$..."
+
+  auth_disabled: false
+  ```
+
+- Send requests with a `Bearer` token:
+
+  ```bash
+  curl -X POST "http://localhost:8080/v1/analyze" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer YOUR_PLAINTEXT_API_KEY" \
+    -d '{ "geometry": [...], "surface": [...], "vehicle": "tesla_model_3", "condition": "dry" }'
+  ```
+
+- For local development you can disable auth with:
+
+  ```bash
+  export AUTH_DISABLED=true
+  ```
+
 ## Versioning & Stability
 
 ApexVelocity follows **semantic versioning**:

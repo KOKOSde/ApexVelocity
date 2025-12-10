@@ -4,6 +4,8 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +13,9 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/time/rate"
+	"gopkg.in/yaml.v3"
 )
 
 var logger *zap.Logger
@@ -26,6 +31,89 @@ func init() {
 		return
 	}
 	logger = l
+}
+
+// APIKey represents a single API key configuration entry.
+type APIKey struct {
+	Name      string `yaml:"name"`
+	Hash      string `yaml:"hash"`
+	RateLimit int    `yaml:"rate_limit"` // requests per minute
+}
+
+// AuthConfig is loaded from config/auth.yaml.
+type AuthConfig struct {
+	APIKeys      []APIKey `yaml:"api_keys"`
+	AdminKeys    []APIKey `yaml:"admin_keys"`
+	AuthDisabled bool     `yaml:"auth_disabled"`
+}
+
+// AuthMiddleware holds API keys and rate limiters.
+type AuthMiddleware struct {
+	keys     []*APIKey
+	limiters map[string]*rate.Limiter
+	disabled bool
+}
+
+// NewAuthMiddleware loads API key configuration from the given path.
+// If the file is missing or invalid, auth is effectively disabled but
+// the server will still start.
+func NewAuthMiddleware(configPath string) *AuthMiddleware {
+	mw := &AuthMiddleware{
+		keys:     []*APIKey{},
+		limiters: map[string]*rate.Limiter{},
+		disabled: true,
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		if logger != nil {
+			logger.Warn("auth_config_not_found",
+				zap.String("path", configPath),
+				zap.Error(err),
+			)
+		}
+		return mw
+	}
+
+	var cfg AuthConfig
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		if logger != nil {
+			logger.Error("auth_config_unmarshal_error",
+				zap.String("path", configPath),
+				zap.Error(err),
+			)
+		}
+		return mw
+	}
+
+	// Populate keys and limiters
+	for i := range cfg.APIKeys {
+		key := cfg.APIKeys[i]
+		mw.keys = append(mw.keys, &key)
+		if key.RateLimit > 0 {
+			// Convert "requests per minute" into a rate limiter.
+			limit := rate.Every(time.Minute / time.Duration(key.RateLimit))
+			mw.limiters[key.Name] = rate.NewLimiter(limit, key.RateLimit)
+		}
+	}
+
+	for i := range cfg.AdminKeys {
+		key := cfg.AdminKeys[i]
+		mw.keys = append(mw.keys, &key)
+		// Admin keys are not rate-limited by default.
+	}
+
+	mw.disabled = cfg.AuthDisabled
+
+	if logger != nil {
+		logger.Info("auth_config_loaded",
+			zap.Int("api_keys", len(cfg.APIKeys)),
+			zap.Int("admin_keys", len(cfg.AdminKeys)),
+			zap.Bool("auth_disabled", cfg.AuthDisabled),
+		)
+	}
+
+	return mw
 }
 
 // AnalyzeRequest represents a request to analyze a path.
@@ -69,13 +157,30 @@ type ErrorResponse struct {
 type Handler struct {
 	workerPool chan struct{}
 	configMu   sync.RWMutex
+	auth       *AuthMiddleware
 }
 
-// NewHandler creates a new API handler with a worker pool.
-func NewHandler(maxWorkers int) *Handler {
-	return &Handler{
+// NewHandler creates a new API handler with a worker pool and optional auth.
+func NewHandler(maxWorkers int, configDir string) *Handler {
+	h := &Handler{
 		workerPool: make(chan struct{}, maxWorkers),
 	}
+
+	// Initialize auth middleware from config/auth.yaml, but do not fail hard
+	// if the file is missing or invalid.
+	authConfigPath := configDir + "/auth.yaml"
+	h.auth = NewAuthMiddleware(authConfigPath)
+
+	return h
+}
+
+// AuthMiddleware returns the auth middleware function. If auth is disabled
+// or not configured, this returns a no-op middleware.
+func (h *Handler) AuthMiddleware() func(http.Handler) http.Handler {
+	if h.auth == nil {
+		return func(next http.Handler) http.Handler { return next }
+	}
+	return h.auth.Middleware
 }
 
 // acquireWorker blocks until a worker slot is available.
@@ -136,6 +241,65 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// SecurityHeadersMiddleware adds common security headers to HTTP responses.
+func SecurityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Middleware enforces API key authentication and per-key rate limiting.
+func (auth *AuthMiddleware) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Allow disabling auth via environment or config.
+		if auth == nil || auth.disabled || os.Getenv("AUTH_DISABLED") == "true" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			writeError(w, http.StatusUnauthorized, "Missing Authorization header")
+			return
+		}
+
+		token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+		if token == "" {
+			writeError(w, http.StatusUnauthorized, "Missing API token")
+			return
+		}
+
+		var matchedKey *APIKey
+		for _, key := range auth.keys {
+			if bcrypt.CompareHashAndPassword([]byte(key.Hash), []byte(token)) == nil {
+				matchedKey = key
+				break
+			}
+		}
+
+		if matchedKey == nil {
+			writeError(w, http.StatusForbidden, "Invalid API key")
+			return
+		}
+
+		// Enforce rate limit for this key, if configured.
+		if limiter, ok := auth.limiters[matchedKey.Name]; ok {
+			if !limiter.Allow() {
+				w.Header().Set("Retry-After", "60")
+				writeError(w, http.StatusTooManyRequests, "Rate limit exceeded")
+				return
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // HandleConfigReload handles POST /v1/config/reload
 func (h *Handler) HandleConfigReload(w http.ResponseWriter, r *http.Request) {
 	h.configMu.Lock()
@@ -147,6 +311,46 @@ func (h *Handler) HandleConfigReload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "config reloaded"})
+}
+
+// HandleRateLimit returns basic rate limit information for the current API key.
+// It uses the same Authorization header as other authenticated endpoints.
+func (h *Handler) HandleRateLimit(w http.ResponseWriter, r *http.Request) {
+	if h.auth == nil || h.auth.disabled || os.Getenv("AUTH_DISABLED") == "true" {
+		writeJSON(w, http.StatusOK, map[string]string{"status": "auth_disabled"})
+		return
+	}
+
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		writeError(w, http.StatusUnauthorized, "Missing Authorization header")
+		return
+	}
+
+	token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+	if token == "" {
+		writeError(w, http.StatusUnauthorized, "Missing API token")
+		return
+	}
+
+	var matchedKey *APIKey
+	for _, key := range h.auth.keys {
+		if bcrypt.CompareHashAndPassword([]byte(key.Hash), []byte(token)) == nil {
+			matchedKey = key
+			break
+		}
+	}
+
+	if matchedKey == nil {
+		writeError(w, http.StatusForbidden, "Invalid API key")
+		return
+	}
+
+	resp := map[string]interface{}{
+		"key":                  matchedKey.Name,
+		"rate_limit_per_minute": matchedKey.RateLimit,
+	}
+	writeJSON(w, http.StatusOK, resp)
 }
 
 // HandleAnalyze handles POST /v1/analyze

@@ -1,0 +1,32 @@
+# API key configuration for the ApexVelocity HTTP API.
+#
+# IMPORTANT:
+# - Replace the example bcrypt hashes below with hashes generated from your own
+#   API key strings (tokens).
+# - You can generate a bcrypt hash using a small Go/Python script or tools like
+#   `htpasswd` (Apache) configured for bcrypt.
+#
+# Example (Go):
+#   password := []byte("my-dev-api-key")
+#   hash, _ := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+#
+# Never commit your real API keys or plaintext tokens to version control.
+
+api_keys:
+  - name: "dev_key"
+    # Example bcrypt hash placeholder; REPLACE for real deployments.
+    hash: "$2a$10$abcdefghijklmnopqrstuvwxyz0123456789abcdabcdabcdabcdab"
+    rate_limit: 100  # requests per minute
+
+  - name: "prod_key"
+    hash: "$2a$10$abcdefghijklmnopqrstuvwxyz0123456789abcdabcdabcdabcdab"
+    rate_limit: 1000
+
+admin_keys:
+  - name: "admin"
+    hash: "$2a$10$abcdefghijklmnopqrstuvwxyz0123456789abcdabcdabcdabcdab"
+
+# Set to true to disable auth (development only).
+auth_disabled: false
+
+
