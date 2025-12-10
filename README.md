@@ -1,14 +1,15 @@
 <p align="center">
   <h1 align="center">🏎️ ApexVelocity</h1>
   <p align="center">
-    <strong>Physics-Based Graph Annotation Engine</strong>
+    <strong>Physics-Based Road & Track Annotation Engine for AVs and Research</strong>
   </p>
   <p align="center">
-    Transform static road networks into dynamic kinematic graphs with physics-accurate velocity profiles and energy predictions.
+    Transform raw OpenStreetMap data into production-grade kinematic graphs with physics-accurate velocity profiles and energy predictions.
   </p>
 </p>
 
 <p align="center">
+  <a href="#about">About</a> •
   <a href="#features">Features</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#installation">Installation</a> •
@@ -19,7 +20,21 @@
 
 ---
 
-![Demo](assets/demo.png)
+## About
+
+ApexVelocity turns static road networks into **physics-aware datasets** you can use to benchmark planners, controllers, and energy models in the real world.
+
+It is built for:
+
+- **AV and robotaxi teams**: Stress‑test motion planners across vehicles, weather conditions (dry/wet), and routes using a consistent C++20 physics core.
+- **PhD researchers**: Generate reproducible benchmarks and rich per‑segment features (lateral/longitudinal G, jerk, friction usage, comfort/safety/difficulty scores, energy).
+- **Startups and tooling teams**: Stand up a CLI or HTTP service that annotates OSM / HD map data in hours instead of rebuilding a physics stack from scratch.
+
+Under the hood, ApexVelocity combines:
+
+- A high‑performance **C++20 core solver** (3‑pass velocity profile, friction, rollover, energy).
+- A batteries‑included **Python package** for routing, feature generation, and visualization.
+- An optional **Go HTTP server** for remote `/v1/analyze` integration.
 
 ## Overview
 
