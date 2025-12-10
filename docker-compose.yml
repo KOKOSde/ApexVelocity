@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  apexvelocity:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/app/config:ro
+    environment:
+      - LOG_LEVEL=info
+    restart: unless-stopped
+
+

@@ -1,0 +1,16 @@
+**/__pycache__
+**/*.pyc
+build/
+core/build/
+dist/
+*.egg-info
+.git
+.github
+.vscode
+*.html
+python/cache/
+server/apex-server
+.go/
+go.tgz
+
+

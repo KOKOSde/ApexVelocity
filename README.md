@@ -133,7 +133,7 @@ ctest --output-on-failure
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/ApexVelocity.git
+git clone https://github.com/KOKOSde/ApexVelocity.git
 cd ApexVelocity
 
 # Install Python dependencies
@@ -146,6 +146,27 @@ make -j$(nproc)
 
 # Install Python package
 cd ../../python && pip install -e .
+```
+
+### Docker (Production Server)
+
+You can run the ApexVelocity HTTP API as a containerized service.
+
+```bash
+# From the repo root
+docker build -t apexvelocity:local .
+
+# Run the server on http://localhost:8080
+docker run --rm -p 8080:8080 apexvelocity:local
+
+# Health check
+curl http://localhost:8080/health
+```
+
+For a more complete setup (with restart policy and mounted config), use Docker Compose:
+
+```bash
+docker-compose up --build
 ```
 
 ## Usage
