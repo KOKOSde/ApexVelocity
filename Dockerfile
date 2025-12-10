@@ -38,7 +38,7 @@ RUN cd server && go build -o apex-server ./cmd/apex-server
 
 
 # Stage 3: Build Python package (optional CLI / tools)
-FROM python:3.11-slim AS python-builder
+FROM python:3.14-slim AS python-builder
 
 WORKDIR /app
 
