@@ -3,6 +3,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -11,6 +12,9 @@ import (
 
 	"github.com/apexvelocity/server/internal/solver"
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +23,41 @@ import (
 )
 
 var logger *zap.Logger
+
+var (
+	httpRequestsTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "apexvelocity_http_requests_total",
+			Help: "Total HTTP requests",
+		},
+		[]string{"method", "endpoint", "status"},
+	)
+
+	httpRequestDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "apexvelocity_http_request_duration_seconds",
+			Help:    "HTTP request duration",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"method", "endpoint"},
+	)
+
+	solverDuration = promauto.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "apexvelocity_solver_duration_seconds",
+			Help:    "Solver execution duration",
+			Buckets: []float64{0.1, 0.5, 1, 2, 5, 10},
+		},
+	)
+
+	solverPointsProcessed = promauto.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "apexvelocity_solver_points_processed",
+			Help:    "Number of points processed by solver",
+			Buckets: []float64{100, 500, 1000, 5000, 10000},
+		},
+	)
+)
 
 func init() {
 	config := zap.NewProductionConfig()
@@ -52,6 +91,17 @@ type AuthMiddleware struct {
 	keys     []*APIKey
 	limiters map[string]*rate.Limiter
 	disabled bool
+}
+
+// statusRecorder wraps an http.ResponseWriter and records the final status code.
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.status = code
+	r.ResponseWriter.WriteHeader(code)
 }
 
 // NewAuthMiddleware loads API key configuration from the given path.
@@ -221,6 +271,12 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		start := time.Now()
 		requestID := uuid.New().String()
 
+		// Wrap ResponseWriter to capture status code for metrics.
+		rec := &statusRecorder{
+			ResponseWriter: w,
+			status:         http.StatusOK,
+		}
+
 		if logger != nil {
 			logger.Info("incoming_request",
 				zap.String("request_id", requestID),
@@ -230,14 +286,25 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			)
 		}
 
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(rec, r)
+
+		duration := time.Since(start)
 
 		if logger != nil {
 			logger.Info("request_completed",
 				zap.String("request_id", requestID),
-				zap.Duration("duration_ms", time.Since(start)),
+				zap.Duration("duration_ms", duration),
+				zap.Int("status", rec.status),
 			)
 		}
+
+		// Record Prometheus metrics
+		method := r.Method
+		path := r.URL.Path
+		statusLabel := fmt.Sprintf("%d", rec.status)
+
+		httpRequestsTotal.WithLabelValues(method, path, statusLabel).Inc()
+		httpRequestDuration.WithLabelValues(method, path).Observe(duration.Seconds())
 	})
 }
 
@@ -251,6 +318,11 @@ func SecurityHeadersMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Content-Security-Policy", "default-src 'self'")
 		next.ServeHTTP(w, r)
 	})
+}
+
+// MetricsHandler exposes Prometheus metrics on /metrics.
+func MetricsHandler() http.Handler {
+	return promhttp.Handler()
 }
 
 // Middleware enforces API key authentication and per-key rate limiting.

@@ -1,0 +1,19 @@
+basePath: /v1
+host: localhost:8080
+info:
+  contact:
+    name: ApexVelocity Team
+    url: https://github.com/KOKOSde/ApexVelocity
+  description: Physics-Based Road Network Annotation Engine
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: ApexVelocity API
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

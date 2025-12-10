@@ -16,8 +16,21 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title ApexVelocity API
+// @version 1.0
+// @description Physics-Based Road Network Annotation Engine
+// @contact.name ApexVelocity Team
+// @contact.url https://github.com/KOKOSde/ApexVelocity
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+// @host localhost:8080
+// @BasePath /v1
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	// Command-line flags
 	port := flag.Int("port", 8080, "Server port")
@@ -65,6 +78,8 @@ func main() {
 	}))
 
 	// Routes
+	r.Handle("/metrics", api.MetricsHandler())
+	r.Get("/docs/*", httpSwagger.WrapHandler)
 	r.Get("/health", handler.HandleHealth)
 
 	r.Route("/v1", func(r chi.Router) {
