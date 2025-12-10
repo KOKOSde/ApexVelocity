@@ -1,0 +1,15 @@
+# ApexVelocity Python Development Dependencies (pinned)
+# =====================================================
+# Install with: pip install -r requirements-dev.txt
+# This file installs test, lint, formatting, and type-checking tools.
+# To upgrade safely, edit versions here or regenerate from requirements-dev.in
+# using pip-tools (pip-compile) and re-run the test suite.
+
+pytest==7.4.4
+pytest-cov==4.1.0
+black==24.4.2
+isort==5.13.2
+mypy==1.10.0
+flake8==7.0.0
+
+
