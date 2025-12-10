@@ -60,6 +60,7 @@ ApexVelocity is a high-performance physics engine that annotates road networks w
 python -m apexvelocity.cli --city "Tokyo, Japan"
 
 # Run the San Francisco benchmark
+cd python
 python examples/demo_san_francisco.py
 
 # Run the Nürburgring wet/dry comparison
@@ -92,7 +93,7 @@ If you do **not** set `MAPBOX_API_KEY`:
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - CMake 3.16+ (for C++ core)
 - C++20 compiler (GCC 10+, Clang 12+)
 
