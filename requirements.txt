@@ -21,7 +21,7 @@ pydeck==0.9.1
 matplotlib==3.8.4
 
 # Reinforcement Learning (optional, but pinned for reproducibility)
-gymnasium==0.29.1
+gymnasium==1.2.2
 
 # Configuration
 pyyaml==6.0.2
