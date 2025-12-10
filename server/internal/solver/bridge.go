@@ -3,7 +3,8 @@ package solver
 
 /*
 #cgo CFLAGS: -I${SRCDIR}/../../../core/include
-#cgo LDFLAGS: -L${SRCDIR}/../../../build/core -lapexvelocity -lstdc++ -lm -lyaml-cpp
+#cgo LDFLAGS: -L${SRCDIR}/../../../build/core -lapexvelocity -lstdc++ -lstdc++fs -lm -lyaml-cpp
+#cgo LDFLAGS: -L${SRCDIR}/../../../build/_deps/yaml-cpp-build
 #cgo LDFLAGS: -Wl,-rpath,${SRCDIR}/../../../build/core
 #cgo LDFLAGS: -Wl,-rpath,${SRCDIR}/../../../build/_deps/yaml-cpp-build
 

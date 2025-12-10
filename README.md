@@ -81,6 +81,13 @@ For high-quality satellite maps, get a free Mapbox token:
    python -m apexvelocity.cli --city "Manhattan, NYC" --style satellite
    ```
 
+If you do **not** set `MAPBOX_API_KEY`:
+
+- The CLI and visualization APIs will still run and will automatically fall back
+  to free styles (e.g., `osm`, `dark`, or `light`).
+- You will see a **warning** in the console explaining that satellite imagery
+  is unavailable and that a free Mapbox token can be added later.
+
 ## Installation
 
 ### Prerequisites
@@ -318,6 +325,31 @@ F_grade = m · g · sin(θ)
 ## Contributing
 
 Contributions are welcome! Please read our contributing guidelines and submit PRs.
+
+### Publishing to Your Own GitHub Repository
+
+To publish ApexVelocity under your own GitHub account:
+
+1. **Create a new empty repository** on GitHub (e.g., `USERNAME/ApexVelocity`).
+2. **Add the remote** in your local clone:
+   ```bash
+   git remote add origin git@github.com:USERNAME/ApexVelocity.git
+   # or, using HTTPS:
+   # git remote add origin https://github.com/USERNAME/ApexVelocity.git
+   ```
+3. **Create a Personal Access Token (PAT)** if you use HTTPS:
+   - Go to GitHub → **Settings → Developer settings → Personal access tokens**.
+   - Generate a token with `repo` scope.
+   - When pushing over HTTPS, use your **GitHub username** and the PAT as the
+     **password** when prompted.
+4. **Push the code and tags**:
+   ```bash
+   git push -u origin master        # or main, depending on your branch name
+   git push origin v1.0.0           # push the 1.0.0 tag
+   ```
+
+Tokens and credentials are **never** stored in this repository; you manage them
+locally via your own Git configuration or credential helper.
 
 ## License
 

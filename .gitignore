@@ -133,6 +133,11 @@ Desktop.ini
 python/*.html
 python/examples/*.html
 
+# Local Go toolchain and artifacts (used only for local builds)
+.go/
+go.tgz
+server/apex-server
+
 # Cached OSM / geocoding data
 python/cache/
 cache/
