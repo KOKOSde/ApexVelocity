@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  test-cpp:
+    name: C++ Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libyaml-cpp-dev nlohmann-json3-dev
+      - name: Build and test core
+        run: |
+          cd core
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake --build . -j"$(nproc)"
+          ctest --output-on-failure
+
+  test-python:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install system build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libyaml-cpp-dev nlohmann-json3-dev
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Install apexvelocity (editable)
+        run: |
+          cd python
+          pip install -e .
+      - name: Run tests
+        run: |
+          cd python
+          pytest tests/ -v --cov=apexvelocity --cov-report=xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./python/coverage.xml
+
+  test-go:
+    name: Go Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      - name: Install C++ dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libyaml-cpp-dev nlohmann-json3-dev
+      - name: Build C++ core for cgo
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake --build . -j"$(nproc)"
+      - name: Build Go server
+        run: |
+          cd server
+          go build ./cmd/apex-server
+      - name: Go tests
+        run: |
+          cd server
+          go test ./... -v
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install linters
+        run: |
+          pip install black isort flake8 mypy
+      - name: Run black
+        run: black --check python/
+      - name: Run isort
+        run: isort --check python/
+      - name: Run flake8
+        run: flake8 python/ --max-line-length=100
+
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [test-cpp, test-python, test-go]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t apexvelocity:${{ github.sha }} .
+      - name: Test image health endpoint
+        run: |
+          docker run -d -p 8080:8080 --name apexvelocity_test apexvelocity:${{ github.sha }}
+          sleep 10
+          curl -f http://localhost:8080/health || (docker logs apexvelocity_test && exit 1)
+          docker rm -f apexvelocity_test
+
+
