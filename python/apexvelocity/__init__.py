@@ -28,8 +28,24 @@ Experimental modules (subject to change in 1.x):
   - Debug/demo helpers under python/examples/
 """
 
+import logging
+import os
+
 __version__ = "1.0.0"
 __author__ = "ApexVelocity Team"
+
+# Configure library logging early. Users can override this by configuring
+# logging before importing apexvelocity or by adjusting APEXVELOCITY_LOG_LEVEL.
+_log_level_name = os.environ.get("APEXVELOCITY_LOG_LEVEL", "INFO").upper()
+_log_level = getattr(logging, _log_level_name, logging.INFO)
+
+logging.basicConfig(
+    level=_log_level,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+logger = logging.getLogger("apexvelocity")
 
 # Try to import the C++ extension module
 try:

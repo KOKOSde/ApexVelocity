@@ -47,7 +47,7 @@ func main() {
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.Logger)
+	r.Use(api.LoggingMiddleware)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Timeout(60 * time.Second))

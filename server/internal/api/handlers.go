@@ -3,12 +3,30 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/apexvelocity/server/internal/solver"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+var logger *zap.Logger
+
+func init() {
+	config := zap.NewProductionConfig()
+	config.EncoderConfig.TimeKey = "timestamp"
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+
+	l, err := config.Build()
+	if err != nil {
+		logger = zap.NewNop()
+		return
+	}
+	logger = l
+}
 
 // AnalyzeRequest represents a request to analyze a path.
 type AnalyzeRequest struct {
@@ -75,13 +93,47 @@ func writeJSON(w http.ResponseWriter, status int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(v); err != nil {
-		log.Printf("Error encoding JSON response: %v", err)
+		if logger != nil {
+			logger.Error("encode_response_error", zap.Error(err))
+		}
 	}
 }
 
 // writeError writes an error response.
 func writeError(w http.ResponseWriter, status int, message string) {
+	if logger != nil {
+		logger.Warn("request_error",
+			zap.Int("status", status),
+			zap.String("message", message),
+		)
+	}
 	writeJSON(w, status, ErrorResponse{Error: message})
+}
+
+// LoggingMiddleware logs structured request information for each HTTP call.
+func LoggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		requestID := uuid.New().String()
+
+		if logger != nil {
+			logger.Info("incoming_request",
+				zap.String("request_id", requestID),
+				zap.String("method", r.Method),
+				zap.String("path", r.URL.Path),
+				zap.String("remote_addr", r.RemoteAddr),
+			)
+		}
+
+		next.ServeHTTP(w, r)
+
+		if logger != nil {
+			logger.Info("request_completed",
+				zap.String("request_id", requestID),
+				zap.Duration("duration_ms", time.Since(start)),
+			)
+		}
+	})
 }
 
 // HandleConfigReload handles POST /v1/config/reload
