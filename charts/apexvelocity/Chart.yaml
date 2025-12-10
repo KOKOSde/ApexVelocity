@@ -1,0 +1,14 @@
+apiVersion: v2
+name: apexvelocity
+description: Physics-Based Road Network Annotation Engine
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - physics
+  - routing
+  - autonomous-vehicles
+maintainers:
+  - name: ApexVelocity Team
+    url: https://github.com/KOKOSde/ApexVelocity
+
+
