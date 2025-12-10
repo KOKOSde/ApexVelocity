@@ -251,7 +251,7 @@ ApexVelocity/
 │       └── benchmark_nurburgring.py
 │
 ├── server/                  # Go REST API (optional)
-│   └── cmd/apex-server/
+│   └── cmd/apex-server/     # `go build ./cmd/apex-server` after building core
 │
 └── config/                  # Configuration files
     ├── simulation.yaml
@@ -259,6 +259,28 @@ ApexVelocity/
     ├── tag_mapping.json
     └── vehicle_presets/
 ```
+
+### Building the Go Server (Optional)
+
+To build the REST API server (requires Go 1.20+ and a C++20 toolchain):
+
+```bash
+# 1) Build the C++ core (needed for the cgo bridge)
+cd core
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build . -j"$(nproc)"
+
+# 2) Build the Go server
+cd ../../server
+go build ./cmd/apex-server
+```
+
+This produces an `apex-server` binary that exposes:
+
+- `GET  /health`
+- `POST /v1/config/reload`
+- `POST /v1/analyze`
 
 ## Benchmarks
 
