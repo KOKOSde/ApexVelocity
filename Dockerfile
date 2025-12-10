@@ -2,7 +2,7 @@
 # Multi-stage build: C++ core -> Go server -> Python tooling -> slim runtime
 
 # Stage 1: Build C++ core
-FROM ubuntu:22.04 AS cpp-builder
+FROM ubuntu:24.04 AS cpp-builder
 
 RUN apt-get update && apt-get install -y \
     cmake \
