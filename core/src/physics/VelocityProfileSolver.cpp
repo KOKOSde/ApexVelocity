@@ -168,8 +168,12 @@ SolverResult VelocityProfileSolver::solve(Path& path, const ConfigManager& confi
 }
 
 void VelocityProfileSolver::compute_static_limits(Path& path, const ConfigManager& config_mgr) {
-    double gravity = config_mgr.get_sim_param_or<double>("gravity", PhysicsConstants::EARTH_GRAVITY);
-    bool enable_rollover = config_mgr.get_sim_param_or<bool>("enable_rollover_checks", true);
+    double gravity = config_mgr.get_sim_param_or<double>(
+        "gravity", PhysicsConstants::EARTH_GRAVITY);
+    bool enable_rollover = config_mgr.get_sim_param_or<bool>(
+        "enable_rollover_checks", true);
+    double v_cap = config_mgr.get_sim_param_or<double>(
+        "max_velocity_cap", PhysicsConstants::MAX_SAFE_SPEED);
     
     // Override with solver config if specified
     if (!config_.enable_rollover_checks) {
@@ -210,8 +214,8 @@ void VelocityProfileSolver::compute_static_limits(Path& path, const ConfigManage
             v_static = std::min(v_static, v_lat_g);
         }
         
-        // Apply absolute speed cap
-        v_static = std::min(v_static, PhysicsConstants::MAX_SAFE_SPEED);
+        // Apply absolute speed cap from simulation config
+        v_static = std::min(v_static, v_cap);
         
         pt.v_static = v_static;
         pt.v_profile = v_static;  // Initialize profile with static limit
@@ -220,6 +224,10 @@ void VelocityProfileSolver::compute_static_limits(Path& path, const ConfigManage
 
 void VelocityProfileSolver::backward_pass(Path& path, double gravity) {
     if (path.size() < 2) return;
+    
+    // Get global velocity cap from config
+    auto& cfg_mgr = apex::ConfigManager::instance();
+    double v_cap = cfg_mgr.get_sim_param_or<double>("max_velocity_cap", PhysicsConstants::MAX_SAFE_SPEED);
     
     // Maximum braking deceleration
     double a_brake_max = vehicle_.max_brake_g * gravity;
@@ -246,13 +254,17 @@ void VelocityProfileSolver::backward_pass(Path& path, double gravity) {
         // => v_i = sqrt(v_{i+1}^2 + 2 * a_brake * d)
         double v_brake_limited = std::sqrt(v_next * v_next + 2.0 * a_brake_max * d);
         
-        // Take minimum of static limit and brake-limited speed
-        path[prev_idx].v_profile = std::min(path[prev_idx].v_static, v_brake_limited);
+        // Take minimum of static limit, brake-limited speed, and global cap
+        path[prev_idx].v_profile = std::min({path[prev_idx].v_static, v_brake_limited, v_cap});
     }
 }
 
 void VelocityProfileSolver::forward_pass(Path& path, double gravity) {
     if (path.size() < 2) return;
+    
+    // Get global velocity cap from config
+    auto& cfg_mgr = apex::ConfigManager::instance();
+    double v_cap = cfg_mgr.get_sim_param_or<double>("max_velocity_cap", PhysicsConstants::MAX_SAFE_SPEED);
     
     // Set initial speed only if explicitly specified (> 0)
     if (config_.initial_speed_mps > 0.0) {
@@ -291,8 +303,8 @@ void VelocityProfileSolver::forward_pass(Path& path, double gravity) {
         // v_i = sqrt(v_{i-1}^2 + 2 * a_accel * d)
         double v_accel_limited = std::sqrt(v_prev * v_prev + 2.0 * a_accel_max * d);
         
-        // Take minimum of backward pass result and acceleration-limited speed
-        path[i].v_profile = std::min(path[i].v_profile, v_accel_limited);
+        // Take minimum of backward pass result, acceleration-limited speed, and global cap
+        path[i].v_profile = std::min({path[i].v_profile, v_accel_limited, v_cap});
         
         // Ensure minimum speed
         path[i].v_profile = std::max(path[i].v_profile, config_.min_speed_mps);

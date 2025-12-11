@@ -8,7 +8,10 @@ enable_rollover_checks: true      # enable vehicle rollover safety calculations
 global_friction_multiplier: 1.0   # multiplier for wet/ice scenarios (1.0 = dry conditions)
 
 # Advanced parameters
-max_velocity_cap: 83.33           # m/s (~300 km/h) - absolute velocity ceiling
+# Absolute velocity ceiling used by the solver when curvature/speed limits
+# would otherwise allow unreasonably high speeds. This keeps flat/straight
+# segments in a realistic highway range for energy calculations.
+max_velocity_cap: 33.33           # m/s (~120 km/h)
 min_curvature_threshold: 1.0e-9   # 1/m - below this, treat as straight line
 
 

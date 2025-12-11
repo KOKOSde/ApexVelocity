@@ -137,7 +137,8 @@ py::dict solve_profile(
     const std::string& vehicle_name = "default",
     const std::string& condition = "dry",
     double initial_speed = 0.0,
-    double final_speed = 0.0
+    double final_speed = 0.0,
+    const std::string& physics_model = "kinematic"
 ) {
     // Build path
     apex::physics::Path path;
@@ -176,6 +177,13 @@ py::dict solve_profile(
     config.condition = condition;
     config.initial_speed_mps = initial_speed;
     config.final_speed_mps = final_speed;
+    
+    // Set physics model
+    if (physics_model == "dynamic") {
+        config.model = apex::physics::PhysicsModel::DYNAMIC;
+    } else {
+        config.model = apex::physics::PhysicsModel::KINEMATIC;
+    }
     
     PySolver solver(vehicle, config);
     return solver.solve(path);
@@ -242,6 +250,14 @@ PYBIND11_MODULE(_apexvelocity_core, m) {
         .def("grade_angle_to", &apex::physics::PathPoint::grade_angle_to);
     
     // ========================================================================
+    // PhysicsModel enum
+    // ========================================================================
+    py::enum_<apex::physics::PhysicsModel>(m, "PhysicsModel")
+        .value("KINEMATIC", apex::physics::PhysicsModel::KINEMATIC)
+        .value("DYNAMIC", apex::physics::PhysicsModel::DYNAMIC)
+        .export_values();
+    
+    // ========================================================================
     // SolverConfig
     // ========================================================================
     py::class_<apex::physics::SolverConfig>(m, "SolverConfig")
@@ -251,7 +267,10 @@ PYBIND11_MODULE(_apexvelocity_core, m) {
         .def_readwrite("enable_power_limit", &apex::physics::SolverConfig::enable_power_limit)
         .def_readwrite("min_speed_mps", &apex::physics::SolverConfig::min_speed_mps)
         .def_readwrite("initial_speed_mps", &apex::physics::SolverConfig::initial_speed_mps)
-        .def_readwrite("final_speed_mps", &apex::physics::SolverConfig::final_speed_mps);
+        .def_readwrite("final_speed_mps", &apex::physics::SolverConfig::final_speed_mps)
+        .def_readwrite("model", &apex::physics::SolverConfig::model)
+        .def_readwrite("enable_tire_slip", &apex::physics::SolverConfig::enable_tire_slip)
+        .def_readwrite("enable_weight_transfer", &apex::physics::SolverConfig::enable_weight_transfer);
     
     // ========================================================================
     // VehicleLoader
@@ -339,11 +358,13 @@ PYBIND11_MODULE(_apexvelocity_core, m) {
         py::arg("condition") = "dry",
         py::arg("initial_speed") = 0.0,
         py::arg("final_speed") = 0.0,
+        py::arg("physics_model") = "kinematic",
         "Convenience function to solve a velocity profile.\n"
         "geometry: list of [x, y, z, curvature, distance_along]\n"
         "surfaces: list of surface type strings\n"
         "vehicle: vehicle preset name or 'default'\n"
-        "condition: 'dry' or 'wet'");
+        "condition: 'dry' or 'wet'\n"
+        "physics_model: 'kinematic' (fast, 3-pass) or 'dynamic' (tire model)");
     
     // ========================================================================
     // Default config directory

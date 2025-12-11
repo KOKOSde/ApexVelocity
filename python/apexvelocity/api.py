@@ -100,6 +100,36 @@ def create_path(
             )
         )
 
+    # If curvatures were not provided, recompute them from geometry so that
+    # the physics core sees realistic curvature values and can enforce
+    # friction/rollover limits correctly.
+    if curvatures is None:
+        try:
+            from apexvelocity.geometry import recompute_curvature  # type: ignore
+        except ImportError:
+            # Geometry module not available; fall back to zero curvature.
+            return path
+
+        # Convert to dict format expected by recompute_curvature
+        path_dicts = []
+        for p in path:
+            path_dicts.append(
+                {
+                    "x_m": p.x,
+                    "y_m": p.y,
+                    "z_m": p.z,
+                    "distance_along_m": p.distance_along,
+                    "curvature": p.curvature,
+                }
+            )
+
+        # Recompute curvature with a small smoothing window
+        path_dicts = recompute_curvature(path_dicts, smooth_window=3)
+
+        # Update path with calculated curvatures
+        for i, p in enumerate(path):
+            p.curvature = float(path_dicts[i].get("curvature", 0.0))
+
     return path
 
 
@@ -160,6 +190,7 @@ def solve(
     condition: str = "dry",
     initial_speed: float = 0.0,
     final_speed: float = 0.0,
+    physics_model: str = "kinematic",
 ) -> SolveResultData:
     """
     Solve velocity profile for a path.
@@ -171,6 +202,7 @@ def solve(
         condition: "dry" or "wet"
         initial_speed: Initial speed constraint (m/s)
         final_speed: Final speed constraint (m/s)
+        physics_model: "kinematic" (fast, 3-pass) or "dynamic" (tire model, experimental)
 
     Returns:
         SolveResultData with velocity profile and energy data
@@ -197,6 +229,7 @@ def solve(
         condition=condition,
         initial_speed=initial_speed,
         final_speed=final_speed,
+        physics_model=physics_model,
     )
 
     # Convert to Python dataclass
