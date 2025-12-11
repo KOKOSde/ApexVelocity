@@ -12,4 +12,9 @@ isort==5.13.2
 mypy==1.10.0
 flake8==7.0.0
 
+# ML / data stack for research-only features (uncertainty quantification, validation)
+pandas==2.2.2
+scikit-learn==1.4.2
+joblib==1.4.2
+
 

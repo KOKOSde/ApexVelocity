@@ -30,13 +30,13 @@ def fetch_way_by_name(
 ) -> List[Dict]:
     """
     Fetch a street/road by name from OpenStreetMap.
-    
+
     Args:
         name: Street name (e.g., "Lombard Street")
         city: City name (e.g., "San Francisco")
         country: Country (e.g., "USA")
         way_type: OSM way type (highway, building, etc.)
-    
+
     Returns:
         List of {lat, lon} coordinate dicts
     """
@@ -46,27 +46,27 @@ def fetch_way_by_name(
         area_filters.append(f'area["name"="{city}"]')
     if country:
         area_filters.append(f'area["name"="{country}"]')
-    
+
     if area_filters:
         area_query = " -> .searchArea;\n".join(area_filters) + " -> .searchArea;"
         area_ref = "(area.searchArea)"
     else:
         area_query = ""
         area_ref = ""
-    
+
     query = f"""
     [out:json][timeout:30];
     {area_query}
     way["{way_type}"]["name"~"{name}",i]{area_ref};
     out geom;
     """
-    
+
     return _execute_overpass_query(query)
 
 
 def fetch_way_by_bbox(
     min_lat: float,
-    min_lon: float, 
+    min_lon: float,
     max_lat: float,
     max_lon: float,
     way_type: str = "highway",
@@ -74,33 +74,33 @@ def fetch_way_by_bbox(
 ) -> List[Dict]:
     """
     Fetch ways within a bounding box.
-    
+
     Args:
         min_lat, min_lon, max_lat, max_lon: Bounding box
         way_type: OSM way type
         name_filter: Optional regex to filter by name
-    
+
     Returns:
         List of {lat, lon} coordinate dicts
     """
     name_clause = f'["name"~"{name_filter}",i]' if name_filter else ""
-    
+
     query = f"""
     [out:json][timeout:30];
     way["{way_type}"]{name_clause}({min_lat},{min_lon},{max_lat},{max_lon});
     out geom;
     """
-    
+
     return _execute_overpass_query(query)
 
 
 def fetch_relation_by_id(relation_id: int) -> List[Dict]:
     """
     Fetch a relation (like a race track) by its OSM relation ID.
-    
+
     Args:
         relation_id: OSM relation ID (e.g., 36916 for Nürburgring)
-    
+
     Returns:
         List of {lat, lon} coordinate dicts forming the route
     """
@@ -110,7 +110,7 @@ def fetch_relation_by_id(relation_id: int) -> List[Dict]:
     way(r);
     out geom;
     """
-    
+
     return _execute_overpass_query(query)
 
 
@@ -123,12 +123,12 @@ def fetch_route_by_coordinates(
 ) -> List[Dict]:
     """
     Fetch a route between two points using OSRM.
-    
+
     Args:
         start_lat, start_lon: Start coordinates
         end_lat, end_lon: End coordinates
         profile: Routing profile (car, bike, foot)
-    
+
     Returns:
         List of {lat, lon} coordinate dicts
     """
@@ -136,18 +136,18 @@ def fetch_route_by_coordinates(
     url = f"https://router.project-osrm.org/route/v1/{profile}/"
     url += f"{start_lon},{start_lat};{end_lon},{end_lat}"
     url += "?geometries=geojson&overview=full"
-    
+
     try:
         with urllib.request.urlopen(url, timeout=30) as response:
-            data = json.loads(response.read().decode('utf-8'))
-            
-            if data.get('code') != 'Ok' or not data.get('routes'):
+            data = json.loads(response.read().decode("utf-8"))
+
+            if data.get("code") != "Ok" or not data.get("routes"):
                 print(f"Warning: OSRM routing failed: {data.get('code')}")
                 return []
-            
-            coords = data['routes'][0]['geometry']['coordinates']
-            return [{'lat': c[1], 'lon': c[0]} for c in coords]
-            
+
+            coords = data["routes"][0]["geometry"]["coordinates"]
+            return [{"lat": c[1], "lon": c[0]} for c in coords]
+
     except Exception as e:
         print(f"Warning: OSRM request failed: {e}")
         return []
@@ -156,10 +156,10 @@ def fetch_route_by_coordinates(
 def fetch_lombard_street_sf() -> List[Dict]:
     """
     Fetch the famous crooked section of Lombard Street, San Francisco.
-    
+
     The crooked section is specifically on the 1000 block between Hyde St
     and Leavenworth St. This is a VERY small area: ~200m x 50m.
-    
+
     Returns:
         List of {lat, lon} coordinate dicts that belong specifically to
         the Lombard Street carriageway, not the cross streets.
@@ -207,8 +207,7 @@ def fetch_lombard_street_sf() -> List[Dict]:
         filtered = [
             c
             for c in coords
-            if min_lat <= c["lat"] <= max_lat
-            and min_lon <= c["lon"] <= max_lon
+            if min_lat <= c["lat"] <= max_lat and min_lon <= c["lon"] <= max_lon
         ]
         if len(filtered) >= 5:
             print(f"  Filtered to {len(filtered)} Lombard points in crooked section")
@@ -218,18 +217,48 @@ def fetch_lombard_street_sf() -> List[Dict]:
     return []
 
 
+def _is_reasonable_nurburgring_coords(coords: List[Dict]) -> bool:
+    """
+    Lightweight sanity check for Nordschleife geometry.
+
+    The real track spans roughly 3–7 km N-S and 5–10 km E-W. If the fetched
+    coordinates produce extents far outside this range, treat the result as
+    invalid and fall back to the hand-traced baseline geometry.
+    """
+    if not coords:
+        return False
+
+    lats = [c["lat"] for c in coords]
+    lons = [c["lon"] for c in coords]
+
+    lat_range = max(lats) - min(lats)
+    lon_range = max(lons) - min(lons)
+
+    ns_km = lat_range * 111.32
+    ew_km = lon_range * 111.32 * math.cos(math.radians(sum(lats) / len(lats)))
+
+    if not (3.0 <= ns_km <= 7.5 and 5.0 <= ew_km <= 12.0):
+        print(
+            f"  Discarding OSM Nordschleife geometry with "
+            f"N-S={ns_km:.1f}km, E-W={ew_km:.1f}km (expected ~5x7km)"
+        )
+        return False
+
+    return True
+
+
 def fetch_nurburgring_nordschleife() -> List[Dict]:
     """
     Fetch the Nürburgring Nordschleife track geometry.
-    
+
     The Nordschleife track road is named "Nordschleife" in OSM.
     We fetch all ways with this name within the track's bounding box.
-    
+
     Returns:
         List of {lat, lon} coordinate dicts
     """
     print("Fetching Nürburgring Nordschleife from OSM...")
-    
+
     # The Nordschleife track roads are named "Nordschleife" in OSM
     # Bounding box covers the full 20.8km track
     query = """
@@ -240,13 +269,13 @@ def fetch_nurburgring_nordschleife() -> List[Dict]:
     );
     out geom;
     """
-    
+
     coords = _execute_overpass_query(query)
-    
-    if coords and len(coords) >= 100:
+
+    if coords and len(coords) >= 100 and _is_reasonable_nurburgring_coords(coords):
         print(f"  Got {len(coords)} points for Nordschleife track")
         return coords
-    
+
     # Fallback: try the race track relation
     print("  Trying race track relation...")
     query = """
@@ -255,23 +284,17 @@ def fetch_nurburgring_nordschleife() -> List[Dict]:
     way(r);
     out geom;
     """
-    
+
     coords = _execute_overpass_query(query)
-    
-    if coords and len(coords) >= 100:
+
+    if coords and len(coords) >= 100 and _is_reasonable_nurburgring_coords(coords):
         return coords
-    
-    # Final fallback: get any road in the area
-    print("  Using general road approach...")
-    query = """
-    [out:json][timeout:60];
-    way["highway"~"primary|secondary|tertiary"](50.32,6.94,50.36,7.01);
-    out geom;
-    """
-    
-    coords = _execute_overpass_query(query)
-    
-    return coords if coords else []
+
+    # Final fallback: if both targeted queries failed or produced unreasonable
+    # geometry, give up and let callers fall back to the built-in approximate
+    # Nordschleife track embedded in the examples module.
+    print("  Falling back to built-in Nordschleife approximation.")
+    return []
 
 
 def _execute_overpass_query(query: str) -> List[Dict]:
@@ -282,49 +305,51 @@ def _execute_overpass_query(query: str) -> List[Dict]:
     accurate materials and speed limits instead of hard-coding asphalt.
     """
     try:
-        data = query.encode('utf-8')
+        data = query.encode("utf-8")
         req = urllib.request.Request(
             OVERPASS_URL,
-            data=urllib.parse.urlencode({'data': query}).encode('utf-8'),
-            headers={'User-Agent': 'ApexVelocity/1.0'}
+            data=urllib.parse.urlencode({"data": query}).encode("utf-8"),
+            headers={"User-Agent": "ApexVelocity/1.0"},
         )
-        
+
         with urllib.request.urlopen(req, timeout=60) as response:
-            result = json.loads(response.read().decode('utf-8'))
-        
+            result = json.loads(response.read().decode("utf-8"))
+
         # Extract coordinates from ways, carrying over relevant tags
         all_coords = []
-        
-        for element in result.get('elements', []):
-            if element.get('type') == 'way' and 'geometry' in element:
-                tags = element.get('tags', {}) or {}
-                highway = tags.get('highway', '')
-                surface = tags.get('surface', '')
-                maxspeed = tags.get('maxspeed', None)
-                tracktype = tags.get('tracktype', '')
-                
-                for node in element['geometry']:
-                    all_coords.append({
-                        'lat': node['lat'],
-                        'lon': node['lon'],
-                        'highway': highway,
-                        'surface': surface,
-                        'maxspeed': maxspeed,
-                        'tracktype': tracktype,
-                    })
-        
+
+        for element in result.get("elements", []):
+            if element.get("type") == "way" and "geometry" in element:
+                tags = element.get("tags", {}) or {}
+                highway = tags.get("highway", "")
+                surface = tags.get("surface", "")
+                maxspeed = tags.get("maxspeed", None)
+                tracktype = tags.get("tracktype", "")
+
+                for node in element["geometry"]:
+                    all_coords.append(
+                        {
+                            "lat": node["lat"],
+                            "lon": node["lon"],
+                            "highway": highway,
+                            "surface": surface,
+                            "maxspeed": maxspeed,
+                            "tracktype": tracktype,
+                        }
+                    )
+
         # Remove duplicates while preserving order
         seen = set()
         unique_coords = []
         for c in all_coords:
-            key = (round(c['lat'], 6), round(c['lon'], 6))
+            key = (round(c["lat"], 6), round(c["lon"], 6))
             if key not in seen:
                 seen.add(key)
                 unique_coords.append(c)
-        
+
         print(f"  Fetched {len(unique_coords)} coordinates from OSM")
         return unique_coords
-        
+
     except Exception as e:
         print(f"Warning: Overpass query failed: {e}")
         return []
@@ -336,56 +361,63 @@ def order_coordinates_as_path(
 ) -> List[Dict]:
     """
     Order a set of coordinates into a continuous path using nearest-neighbor.
-    
+
     Args:
         coords: List of {lat, lon} dicts
         start_point: Optional (lat, lon) to start from
-    
+
     Returns:
         Ordered list of coordinates
     """
     if len(coords) < 2:
         return coords
-    
+
     remaining = coords.copy()
-    
+
     # Find starting point
     if start_point:
         start_lat, start_lon = start_point
-        closest_idx = min(range(len(remaining)), 
-                         key=lambda i: _haversine_dist(
-                             remaining[i]['lat'], remaining[i]['lon'],
-                             start_lat, start_lon))
+        closest_idx = min(
+            range(len(remaining)),
+            key=lambda i: _haversine_dist(
+                remaining[i]["lat"], remaining[i]["lon"], start_lat, start_lon
+            ),
+        )
         current = remaining.pop(closest_idx)
     else:
         current = remaining.pop(0)
-    
+
     ordered = [current]
-    
+
     while remaining:
         # Find nearest point
-        nearest_idx = min(range(len(remaining)),
-                         key=lambda i: _haversine_dist(
-                             current['lat'], current['lon'],
-                             remaining[i]['lat'], remaining[i]['lon']))
+        nearest_idx = min(
+            range(len(remaining)),
+            key=lambda i: _haversine_dist(
+                current["lat"], current["lon"], remaining[i]["lat"], remaining[i]["lon"]
+            ),
+        )
         current = remaining.pop(nearest_idx)
         ordered.append(current)
-    
+
     return ordered
 
 
 def _haversine_dist(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate Haversine distance between two points in meters."""
     R = 6371000  # Earth radius in meters
-    
+
     lat1_rad = math.radians(lat1)
     lat2_rad = math.radians(lat2)
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
-    
-    a = math.sin(dlat/2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon/2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-    
+
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
     return R * c
 
 
@@ -393,50 +425,50 @@ def smooth_path(coords: List[Dict], window: int = 3) -> List[Dict]:
     """Apply moving average smoothing to path coordinates."""
     if len(coords) < window:
         return coords
-    
+
     smoothed = []
     half_window = window // 2
-    
+
     for i in range(len(coords)):
         start = max(0, i - half_window)
         end = min(len(coords), i + half_window + 1)
-        
-        avg_lat = sum(c['lat'] for c in coords[start:end]) / (end - start)
-        avg_lon = sum(c['lon'] for c in coords[start:end]) / (end - start)
-        
-        smoothed.append({'lat': avg_lat, 'lon': avg_lon})
-    
+
+        avg_lat = sum(c["lat"] for c in coords[start:end]) / (end - start)
+        avg_lon = sum(c["lon"] for c in coords[start:end]) / (end - start)
+
+        smoothed.append({"lat": avg_lat, "lon": avg_lon})
+
     return smoothed
 
 
 def calculate_curvature(coords: List[Dict]) -> List[float]:
     """Calculate curvature at each point using 3-point circumcircle."""
     curvatures = [0.0]  # First point has no curvature
-    
+
     for i in range(1, len(coords) - 1):
-        p1, p2, p3 = coords[i-1], coords[i], coords[i+1]
-        
+        p1, p2, p3 = coords[i - 1], coords[i], coords[i + 1]
+
         # Convert to local meters
-        cos_lat = math.cos(math.radians(p2['lat']))
-        x1 = (p1['lon'] - p2['lon']) * 111320 * cos_lat
-        y1 = (p1['lat'] - p2['lat']) * 111320
-        x3 = (p3['lon'] - p2['lon']) * 111320 * cos_lat
-        y3 = (p3['lat'] - p2['lat']) * 111320
-        
+        cos_lat = math.cos(math.radians(p2["lat"]))
+        x1 = (p1["lon"] - p2["lon"]) * 111320 * cos_lat
+        y1 = (p1["lat"] - p2["lat"]) * 111320
+        x3 = (p3["lon"] - p2["lon"]) * 111320 * cos_lat
+        y3 = (p3["lat"] - p2["lat"]) * 111320
+
         # Menger curvature: 4*area / (d12 * d23 * d31)
         area = abs((-x1) * y3 - x3 * (-y1)) / 2
-        d12 = math.sqrt(x1**2 + y1**2)
-        d23 = math.sqrt(x3**2 + y3**2)
-        d31 = math.sqrt((x1-x3)**2 + (y1-y3)**2)
-        
+        d12 = math.sqrt(x1 ** 2 + y1 ** 2)
+        d23 = math.sqrt(x3 ** 2 + y3 ** 2)
+        d31 = math.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
+
         denom = d12 * d23 * d31
         if denom > 0.1:
             curvature = min(4 * area / denom, 0.1)  # Cap at 10m radius
         else:
             curvature = 0.0
-        
+
         curvatures.append(curvature)
-    
+
     curvatures.append(0.0)  # Last point
     return curvatures
 
@@ -448,46 +480,49 @@ def build_path_points(
 ) -> List[Dict]:
     """
     Convert coordinates to full path points for the solver.
-    
+
     Args:
         coords: List of {lat, lon} dicts
         surface_type: Road surface material
         base_elevation: Base elevation (set to 0 for flat display)
-    
+
     Returns:
         List of path point dicts ready for the solver
     """
     if not coords:
         return []
-    
+
     curvatures = calculate_curvature(coords)
     path_points = []
     cumulative_distance = 0.0
-    
+
     for i, coord in enumerate(coords):
         if i > 0:
             dist = _haversine_dist(
-                coords[i-1]['lat'], coords[i-1]['lon'],
-                coord['lat'], coord['lon']
+                coords[i - 1]["lat"], coords[i - 1]["lon"], coord["lat"], coord["lon"]
             )
             cumulative_distance += dist
-        
-        path_points.append({
-            'lat': coord['lat'],
-            'lon': coord['lon'],
-            'x_m': (coord['lon'] - coords[0]['lon']) * 111320 * math.cos(math.radians(coord['lat'])),
-            'y_m': (coord['lat'] - coords[0]['lat']) * 111320,
-            'z_m': base_elevation,
-            'elevation_m': base_elevation,
-            'curvature': curvatures[i],
-            'distance_along_m': cumulative_distance,
-            'surface_type': surface_type,
-            'speed_mps': 20.0,
-            'v_profile': 20.0,
-            'energy_joules': 0.0,
-            'energy_kwh': 0.0,
-        })
-    
+
+        path_points.append(
+            {
+                "lat": coord["lat"],
+                "lon": coord["lon"],
+                "x_m": (coord["lon"] - coords[0]["lon"])
+                * 111320
+                * math.cos(math.radians(coord["lat"])),
+                "y_m": (coord["lat"] - coords[0]["lat"]) * 111320,
+                "z_m": base_elevation,
+                "elevation_m": base_elevation,
+                "curvature": curvatures[i],
+                "distance_along_m": cumulative_distance,
+                "surface_type": surface_type,
+                "speed_mps": 20.0,
+                "v_profile": 20.0,
+                "energy_joules": 0.0,
+                "energy_kwh": 0.0,
+            }
+        )
+
     return path_points
 
 
@@ -513,14 +548,14 @@ def get_nurburgring() -> List[Dict]:
 if __name__ == "__main__":
     # Test the fetcher
     print("Testing OSM Fetcher...")
-    
+
     print("\n=== Lombard Street ===")
     lombard = fetch_lombard_street_sf()
     if lombard:
         print(f"Got {len(lombard)} points")
         print(f"First: {lombard[0]}")
         print(f"Last: {lombard[-1]}")
-    
+
     print("\n=== Nürburgring ===")
     nurburgring = fetch_nurburgring_nordschleife()
     if nurburgring:

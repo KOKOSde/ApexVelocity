@@ -18,6 +18,7 @@ import os
 try:
     import osmnx as ox
     import networkx as nx
+
     _HAS_OSMNX = True
 except ImportError:
     _HAS_OSMNX = False
@@ -26,6 +27,7 @@ except ImportError:
 
 try:
     import numpy as np
+
     _HAS_NUMPY = True
 except ImportError:
     _HAS_NUMPY = False
@@ -33,6 +35,7 @@ except ImportError:
 
 try:
     from pyproj import Transformer
+
     _HAS_PYPROJ = True
 except ImportError:
     _HAS_PYPROJ = False
@@ -40,6 +43,7 @@ except ImportError:
 
 try:
     import requests
+
     _HAS_REQUESTS = True
 except ImportError:
     _HAS_REQUESTS = False
@@ -49,6 +53,7 @@ except ImportError:
 @dataclass
 class LoadedPathPoint:
     """A loaded path point with all attributes."""
+
     lat: float = 0.0
     lon: float = 0.0
     x_m: float = 0.0  # Local X coordinate (meters)
@@ -69,29 +74,27 @@ class LoadedPathPoint:
 @dataclass
 class LoadedPath:
     """A loaded path with metadata."""
+
     points: List[LoadedPathPoint] = field(default_factory=list)
     total_distance_m: float = 0.0
     total_climb_m: float = 0.0  # Total elevation gain
     total_descent_m: float = 0.0  # Total elevation loss
     name: str = ""
     source: str = ""  # "osmnx", "gpx", etc.
-    
+
     def to_geometry_list(self) -> Tuple[List[List[float]], List[str]]:
         """Convert to format expected by solve_profile."""
         geometry = []
         surfaces = []
         for pt in self.points:
-            geometry.append([
-                pt.x_m, pt.y_m, pt.z_m,
-                pt.curvature, pt.distance_along_m
-            ])
+            geometry.append([pt.x_m, pt.y_m, pt.z_m, pt.curvature, pt.distance_along_m])
             surfaces.append(pt.surface_type)
         return geometry, surfaces
 
 
 class TagMapper:
     """Maps OSM tags to material types."""
-    
+
     def __init__(self, mapping_file: Optional[str] = None):
         self.mapping = {}
         if mapping_file and os.path.exists(mapping_file):
@@ -127,29 +130,34 @@ class TagMapper:
                 "surface=ice": "ice",
                 "surface=snow": "snow_packed",
             }
-    
-    def get_material(self, highway: str = "", surface: str = "", 
-                     tracktype: str = "", smoothness: str = "") -> str:
+
+    def get_material(
+        self,
+        highway: str = "",
+        surface: str = "",
+        tracktype: str = "",
+        smoothness: str = "",
+    ) -> str:
         """Get material type from OSM tags."""
         # Surface tag takes priority
         if surface:
             key = f"surface={surface}"
             if key in self.mapping:
                 return self.mapping[key]
-        
+
         # Then highway tag
         if highway:
             key = f"highway={highway}"
             if key in self.mapping:
                 return self.mapping[key]
-        
+
         # Track type hints
         if tracktype:
             if tracktype in ["grade1", "grade2"]:
                 return "gravel"
             elif tracktype in ["grade3", "grade4", "grade5"]:
                 return "dirt"
-        
+
         # Default
         return "asphalt"
 
@@ -162,23 +170,25 @@ class OSMLoader:
     route into local-meter coordinates with curvature, grade, and inferred
     surface types, and export geometry/surface arrays for the core solver.
     """
-    
+
     def __init__(self, config_dir: Optional[str] = None):
         if not _HAS_OSMNX:
-            raise ImportError("osmnx is required for OSM data loading. Install with: pip install osmnx")
+            raise ImportError(
+                "osmnx is required for OSM data loading. Install with: pip install osmnx"
+            )
         if not _HAS_NUMPY:
             raise ImportError("numpy is required. Install with: pip install numpy")
-        
+
         # Load tag mapping
         mapping_file = None
         if config_dir:
             mapping_file = os.path.join(config_dir, "tag_mapping.json")
         self.tag_mapper = TagMapper(mapping_file)
-        
+
         # UTM transformer (will be set based on location)
         self._transformer = None
         self._utm_zone = None
-    
+
     def _setup_utm(self, lat: float, lon: float):
         """Setup UTM transformer for lat/lon to meters conversion."""
         if not _HAS_PYPROJ:
@@ -187,19 +197,19 @@ class OSMLoader:
             self._center_lat = lat
             self._center_lon = lon
             return
-        
+
         # Determine UTM zone
         utm_zone = int((lon + 180) / 6) + 1
         hemisphere = "north" if lat >= 0 else "south"
-        
+
         # Create transformer
         self._transformer = Transformer.from_crs(
             "EPSG:4326",  # WGS84
             f"+proj=utm +zone={utm_zone} +{hemisphere} +ellps=WGS84",
-            always_xy=True
+            always_xy=True,
         )
         self._utm_zone = utm_zone
-    
+
     def _latlon_to_xy(self, lat: float, lon: float) -> Tuple[float, float]:
         """Convert lat/lon to local x,y coordinates in meters."""
         if self._transformer:
@@ -212,31 +222,35 @@ class OSMLoader:
             y = (lat - self._center_lat) * 111320
             x = (lon - self._center_lon) * 111320 * math.cos(math.radians(lat))
             return x, y
-    
-    def graph_from_place(self, place_name: str, 
-                         network_type: str = "drive") -> Any:
+
+    def graph_from_place(self, place_name: str, network_type: str = "drive") -> Any:
         """Fetch road network graph from place name."""
         ox.settings.log_console = False
         ox.settings.use_cache = True
-        
+
         G = ox.graph_from_place(place_name, network_type=network_type)
         return G
-    
-    def graph_from_bbox(self, north: float, south: float,
-                        east: float, west: float,
-                        network_type: str = "drive") -> Any:
+
+    def graph_from_bbox(
+        self,
+        north: float,
+        south: float,
+        east: float,
+        west: float,
+        network_type: str = "drive",
+    ) -> Any:
         """Fetch road network graph from bounding box."""
         ox.settings.log_console = False
         ox.settings.use_cache = True
-        
+
         G = ox.graph_from_bbox(north, south, east, west, network_type=network_type)
         return G
-    
+
     def graph_from_relation(self, relation_id: int) -> Any:
         """Fetch graph from OSM relation ID (e.g., race track)."""
         ox.settings.log_console = False
         ox.settings.use_cache = True
-        
+
         # For race tracks, we need to get the way data
         # This uses Overpass API
         query = f"""
@@ -246,13 +260,10 @@ class OSMLoader:
         (._;>;);
         out body;
         """
-        
+
         try:
             # Try to get as graph
-            G = ox.graph_from_place(
-                {"relation": relation_id},
-                network_type="all"
-            )
+            G = ox.graph_from_place({"relation": relation_id}, network_type="all")
             return G
         except Exception:
             # Fallback: get the relation boundary and create graph
@@ -262,15 +273,15 @@ class OSMLoader:
                 return G
             except Exception as e:
                 raise ValueError(f"Could not load relation {relation_id}: {e}")
-    
+
     def add_elevation(self, G: Any, method: str = "google") -> Any:
         """Add elevation data to graph nodes using real DEM providers.
-        
+
         Supported methods:
             - \"google\": use Google Elevation API via osmnx (requires GOOGLE_API_KEY)
             - \"srtm\": use a local SRTM/DEM raster (set APEXVELOCITY_SRTM_PATH)
             - \"openapi\" / \"opentopo\": use OpenTopoData public API (SRTM, etc.)
-        
+
         The default behaviour can be overridden via the APEXVELOCITY_ELEVATION_METHOD
         environment variable.
         """
@@ -307,18 +318,18 @@ class OSMLoader:
                     return self.add_elevation(G, method=env_method)
                 # If nothing configured, do nothing (no synthetic elevation)
                 return G
-        
+
             # Add edge grades from the populated node elevations
             G = ox.elevation.add_edge_grades(G)
         except Exception:
             # If external elevation provider fails, continue without elevation
             return G
-        
+
         return G
 
     def _add_elevation_opentopo(self, G: Any) -> Any:
         """Populate node elevations using the OpenTopoData public API.
-        
+
         This uses the /v1/<dataset_name> endpoint with batched POST requests.
         Configuration (via environment variables):
             - APEXVELOCITY_OPENTOPO_BASE_URL (default: https://api.opentopodata.org/v1)
@@ -368,9 +379,7 @@ class OSMLoader:
             batch_coords = coords[start_idx:end_idx]
 
             # Build locations string: "lat,lon|lat,lon|..."
-            loc_str = "|".join(
-                f"{lat:.6f},{lon:.6f}" for (lat, lon) in batch_coords
-            )
+            loc_str = "|".join(f"{lat:.6f},{lon:.6f}" for (lat, lon) in batch_coords)
             if not loc_str:
                 continue
 
@@ -404,10 +413,10 @@ class OSMLoader:
                     continue
 
         return G
-    
-    def get_shortest_path(self, G: Any, 
-                          origin: Tuple[float, float],
-                          destination: Tuple[float, float]) -> List[int]:
+
+    def get_shortest_path(
+        self, G: Any, origin: Tuple[float, float], destination: Tuple[float, float]
+    ) -> List[int]:
         """Get shortest path between two points.
 
         This uses osmnx's nearest_nodes helper when available. If that
@@ -446,40 +455,41 @@ class OSMLoader:
 
         route = ox.shortest_path(G, orig_node, dest_node)
         return route
-    
-    def extract_path(self, G: Any, node_ids: List[int],
-                     add_elevation: bool = True) -> LoadedPath:
+
+    def extract_path(
+        self, G: Any, node_ids: List[int], add_elevation: bool = True
+    ) -> LoadedPath:
         """Extract path data from graph and node IDs."""
         if len(node_ids) < 2:
             raise ValueError("Need at least 2 nodes for a path")
-        
+
         # Setup UTM for first node
         first_node = G.nodes[node_ids[0]]
-        self._setup_utm(first_node['y'], first_node['x'])
-        
+        self._setup_utm(first_node["y"], first_node["x"])
+
         points = []
         total_distance = 0.0
         total_climb = 0.0
         total_descent = 0.0
-        
+
         for i, node_id in enumerate(node_ids):
             node = G.nodes[node_id]
-            lat = node['y']
-            lon = node['x']
-            
+            lat = node["y"]
+            lon = node["x"]
+
             # Convert to local coordinates
             x_m, y_m = self._latlon_to_xy(lat, lon)
-            
+
             # Get elevation if available
-            z_m = node.get('elevation', 0.0)
+            z_m = node.get("elevation", 0.0)
             if z_m is None:
                 z_m = 0.0
-            
+
             # Get edge data (for surface info)
             highway = ""
             surface = ""
             speed_limit = None
-            
+
             if i < len(node_ids) - 1:
                 next_node_id = node_ids[i + 1]
                 if G.has_edge(node_id, next_node_id):
@@ -488,24 +498,26 @@ class OSMLoader:
                         # Handle multi-edges
                         if isinstance(edge_data, dict) and 0 in edge_data:
                             edge_data = edge_data[0]
-                        
-                        highway = edge_data.get('highway', '')
+
+                        highway = edge_data.get("highway", "")
                         if isinstance(highway, list):
                             highway = highway[0]
-                        
-                        surface = edge_data.get('surface', '')
+
+                        surface = edge_data.get("surface", "")
                         if isinstance(surface, list):
                             surface = surface[0]
-                        
-                        maxspeed = edge_data.get('maxspeed', None)
+
+                        maxspeed = edge_data.get("maxspeed", None)
                         if maxspeed:
                             try:
                                 if isinstance(maxspeed, list):
                                     maxspeed = maxspeed[0]
-                                speed_limit = float(maxspeed.replace(' km/h', '').replace(' mph', ''))
+                                speed_limit = float(
+                                    maxspeed.replace(" km/h", "").replace(" mph", "")
+                                )
                             except (ValueError, AttributeError):
                                 pass
-            
+
             # Create point
             pt = LoadedPathPoint(
                 lat=lat,
@@ -520,153 +532,159 @@ class OSMLoader:
                 speed_limit_kmh=speed_limit,
                 osm_node_id=node_id,
             )
-            
+
             # Infer material
             pt.surface_type = self.tag_mapper.get_material(highway, surface)
-            
+
             # Calculate distance to previous point
             if i > 0:
                 prev = points[-1]
                 dx = pt.x_m - prev.x_m
                 dy = pt.y_m - prev.y_m
                 dz = pt.z_m - prev.z_m
-                segment_dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+                segment_dist = math.sqrt(dx * dx + dy * dy + dz * dz)
                 total_distance += segment_dist
                 pt.distance_along_m = total_distance
-                
+
                 # Calculate grade
-                horizontal_dist = math.sqrt(dx*dx + dy*dy)
+                horizontal_dist = math.sqrt(dx * dx + dy * dy)
                 if horizontal_dist > 0.1:  # Avoid division by zero
                     pt.grade_angle_rad = math.atan2(dz, horizontal_dist)
                     pt.grade_percent = (dz / horizontal_dist) * 100
-                
+
                 # Track elevation change
                 if dz > 0:
                     total_climb += dz
                 else:
                     total_descent += abs(dz)
-            
+
             points.append(pt)
-        
+
         # Calculate curvature at each point (3-point method)
         self._calculate_curvatures(points)
-        
+
         return LoadedPath(
             points=points,
             total_distance_m=total_distance,
             total_climb_m=total_climb,
             total_descent_m=total_descent,
-            source="osmnx"
+            source="osmnx",
         )
-    
+
     def _calculate_curvatures(self, points: List[LoadedPathPoint]):
         """Calculate curvature at each point using 3-point circumcircle."""
         n = len(points)
-        
+
         for i in range(n):
             if i == 0 or i == n - 1:
                 # Endpoints: use adjacent curvature or 0
                 points[i].curvature = 0.0
             else:
                 # 3-point Menger curvature
-                p1 = (points[i-1].x_m, points[i-1].y_m)
+                p1 = (points[i - 1].x_m, points[i - 1].y_m)
                 p2 = (points[i].x_m, points[i].y_m)
-                p3 = (points[i+1].x_m, points[i+1].y_m)
-                
+                p3 = (points[i + 1].x_m, points[i + 1].y_m)
+
                 curvature = self._menger_curvature(p1, p2, p3)
                 points[i].curvature = curvature
-        
+
         # Smooth curvatures to avoid noise
         self._smooth_curvatures(points)
-    
-    def _menger_curvature(self, p1: Tuple[float, float],
-                          p2: Tuple[float, float],
-                          p3: Tuple[float, float]) -> float:
+
+    def _menger_curvature(
+        self, p1: Tuple[float, float], p2: Tuple[float, float], p3: Tuple[float, float]
+    ) -> float:
         """Calculate Menger curvature from 3 points.
-        
+
         κ = 4 * Area / (|P1-P2| * |P2-P3| * |P3-P1|)
         """
         x1, y1 = p1
         x2, y2 = p2
         x3, y3 = p3
-        
+
         # Signed area of triangle
         area = abs((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1)) / 2
-        
+
         # Side lengths
-        d12 = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-        d23 = math.sqrt((x3 - x2)**2 + (y3 - y2)**2)
-        d31 = math.sqrt((x1 - x3)**2 + (y1 - y3)**2)
-        
+        d12 = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        d23 = math.sqrt((x3 - x2) ** 2 + (y3 - y2) ** 2)
+        d31 = math.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
+
         denom = d12 * d23 * d31
         if denom < 1e-10:
             return 0.0
-        
+
         curvature = 4 * area / denom
         return curvature
-    
+
     def _smooth_curvatures(self, points: List[LoadedPathPoint], window: int = 3):
         """Apply simple moving average smoothing to curvatures."""
         n = len(points)
         if n < window:
             return
-        
+
         curvatures = [pt.curvature for pt in points]
         smoothed = curvatures.copy()
-        
+
         half = window // 2
         for i in range(half, n - half):
-            total = sum(curvatures[i-half:i+half+1])
+            total = sum(curvatures[i - half : i + half + 1])
             smoothed[i] = total / window
-        
+
         for i, pt in enumerate(points):
             pt.curvature = smoothed[i]
 
 
-def load_path_from_place(place_name: str,
-                         origin: Optional[Tuple[float, float]] = None,
-                         destination: Optional[Tuple[float, float]] = None,
-                         config_dir: Optional[str] = None) -> LoadedPath:
+def load_path_from_place(
+    place_name: str,
+    origin: Optional[Tuple[float, float]] = None,
+    destination: Optional[Tuple[float, float]] = None,
+    config_dir: Optional[str] = None,
+) -> LoadedPath:
     """
     Convenience function to load a path from a place name.
-    
+
     Args:
         place_name: OSM place name (e.g., "San Francisco, California")
         origin: (lat, lon) of start point, or None for random
         destination: (lat, lon) of end point, or None for random
         config_dir: Path to config directory for tag mapping
-    
+
     Returns:
         LoadedPath with all points and metadata
     """
     loader = OSMLoader(config_dir)
-    
+
     # Get graph
     G = loader.graph_from_place(place_name)
-    
+
     # Get nodes
     nodes = list(G.nodes())
-    
+
     if origin is None or destination is None:
         # Use first and last nodes
         origin_node = nodes[0]
         dest_node = nodes[min(len(nodes) - 1, 100)]  # Not too far
         route = loader.get_shortest_path(
             G,
-            (G.nodes[origin_node]['y'], G.nodes[origin_node]['x']),
-            (G.nodes[dest_node]['y'], G.nodes[dest_node]['x'])
+            (G.nodes[origin_node]["y"], G.nodes[origin_node]["x"]),
+            (G.nodes[dest_node]["y"], G.nodes[dest_node]["x"]),
         )
     else:
         route = loader.get_shortest_path(G, origin, destination)
-    
+
     return loader.extract_path(G, route)
 
 
-def load_path_from_bbox(north: float, south: float,
-                        east: float, west: float,
-                        origin: Tuple[float, float],
-                        destination: Tuple[float, float],
-                        config_dir: Optional[str] = None) -> LoadedPath:
+def load_path_from_bbox(
+    north: float,
+    south: float,
+    east: float,
+    west: float,
+    origin: Tuple[float, float],
+    destination: Tuple[float, float],
+    config_dir: Optional[str] = None,
+) -> LoadedPath:
     """Load a path from a bounding box."""
     loader = OSMLoader(config_dir)
     G = loader.graph_from_bbox(north, south, east, west)
@@ -674,15 +692,16 @@ def load_path_from_bbox(north: float, south: float,
     return loader.extract_path(G, route)
 
 
-def create_simple_path(coordinates: List[Tuple[float, float, float]],
-                       surfaces: Optional[List[str]] = None) -> LoadedPath:
+def create_simple_path(
+    coordinates: List[Tuple[float, float, float]], surfaces: Optional[List[str]] = None
+) -> LoadedPath:
     """
     Create a path from simple coordinates without OSM.
-    
+
     Args:
         coordinates: List of (x, y, z) tuples in meters
         surfaces: List of surface types (default: "asphalt")
-    
+
     Returns:
         LoadedPath
     """
@@ -690,46 +709,44 @@ def create_simple_path(coordinates: List[Tuple[float, float, float]],
     total_distance = 0.0
     total_climb = 0.0
     total_descent = 0.0
-    
+
     for i, (x, y, z) in enumerate(coordinates):
         surface = surfaces[i] if surfaces and i < len(surfaces) else "asphalt"
-        
+
         pt = LoadedPathPoint(
-            x_m=x, y_m=y, z_m=z,
-            distance_along_m=total_distance,
-            surface_type=surface
+            x_m=x, y_m=y, z_m=z, distance_along_m=total_distance, surface_type=surface
         )
-        
+
         if i > 0:
             prev = points[-1]
             dx = x - prev.x_m
             dy = y - prev.y_m
             dz = z - prev.z_m
-            segment_dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+            segment_dist = math.sqrt(dx * dx + dy * dy + dz * dz)
             total_distance += segment_dist
             pt.distance_along_m = total_distance
-            
+
             # Grade
-            horizontal_dist = math.sqrt(dx*dx + dy*dy)
+            horizontal_dist = math.sqrt(dx * dx + dy * dy)
             if horizontal_dist > 0.1:
                 pt.grade_angle_rad = math.atan2(dz, horizontal_dist)
                 pt.grade_percent = (dz / horizontal_dist) * 100
-            
+
             if dz > 0:
                 total_climb += dz
             else:
                 total_descent += abs(dz)
-        
+
         points.append(pt)
-    
+
     # Calculate curvatures
     loader = OSMLoader.__new__(OSMLoader)
     loader._calculate_curvatures(points)
-    
+
     return LoadedPath(
         points=points,
         total_distance_m=total_distance,
         total_climb_m=total_climb,
         total_descent_m=total_descent,
-        source="manual"
+        source="manual",
     )

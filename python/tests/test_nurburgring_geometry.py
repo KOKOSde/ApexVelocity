@@ -5,7 +5,12 @@ from apexvelocity.geometry import smooth_path_geo, get_path_stats
 
 def _try_fetch_ring_raw():
     try:
-        from apexvelocity.osm_fetcher import fetch_nurburgring_nordschleife, order_coordinates_as_path, build_path_points
+        from apexvelocity.osm_fetcher import (
+            fetch_nurburgring_nordschleife,
+            order_coordinates_as_path,
+            build_path_points,
+        )
+
         coords = fetch_nurburgring_nordschleife()
         if not coords:
             return None
@@ -27,5 +32,4 @@ def test_nurburgring_length_plausible():
     s = get_path_stats(smoothed)
 
     # Known Nordschleife full lap length ≈ 20.83 km
-    assert 19.8 <= s['total_distance_km'] <= 21.9
-
+    assert 19.8 <= s["total_distance_km"] <= 21.9

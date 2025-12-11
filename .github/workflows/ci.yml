@@ -75,7 +75,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DAPEXVELOCITY_BUILD_CAPI=ON
           cmake --build . -j"$(nproc)"
       - name: Build Go server
         run: |
@@ -118,5 +118,54 @@ jobs:
           sleep 10
           curl -f http://localhost:8080/health || (docker logs apexvelocity_test && exit 1)
           docker rm -f apexvelocity_test
+
+  validate-nuscenes:
+    name: nuScenes Validation (Optional)
+    runs-on: ubuntu-latest
+    if: env.NUSCENES_ENABLED == 'true'
+    env:
+      NUSCENES_ENABLED: ${{ secrets.NUSCENES_ENABLED }}
+      NUSCENES_ROOT: ${{ secrets.NUSCENES_ROOT }}
+      NUSCENES_VERSION: ${{ secrets.NUSCENES_VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libyaml-cpp-dev nlohmann-json3-dev
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install nuscenes-devkit
+      - name: Build C++ core
+        run: |
+          cd core
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake --build . -j"$(nproc)"
+      - name: Install apexvelocity (editable)
+        run: |
+          cd python
+          pip install -e .
+      - name: Run nuScenes validation
+        run: |
+          cd python
+          if [ -z "${NUSCENES_ROOT}" ]; then
+            echo "NUSCENES_ROOT not set, skipping validation."
+            exit 0
+          fi
+          python -m validation.validate_nuscenes \
+            --dataroot "${NUSCENES_ROOT}" \
+            --version "${NUSCENES_VERSION:-v1.0-mini}" \
+            --split train \
+            --max-scenes 10 \
+            --vehicle tesla_model_3 \
+            --condition dry \
+            --output validation/nuscenes_residuals.csv
 
 

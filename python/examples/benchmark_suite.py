@@ -51,7 +51,9 @@ def _run_benchmark(
         )
         surfaces.append(pt.get("surface_type", "asphalt"))
 
-    result = av.solve(path=coords, surfaces=surfaces, vehicle=vehicle, condition=condition)
+    result = av.solve(
+        path=coords, surfaces=surfaces, vehicle=vehicle, condition=condition
+    )
 
     vp = result.velocity_profile_mps or []
     ej = result.energy_joules or []
@@ -67,7 +69,9 @@ def _run_benchmark(
     # Analyze
     vehicle_params = av.load_vehicle(vehicle)
     mass = float(vehicle_params["mass_kg"]) if vehicle_params else 1500.0
-    analysis = av.analyze_profile(path_points, condition=condition, vehicle_mass_kg=mass)
+    analysis = av.analyze_profile(
+        path_points, condition=condition, vehicle_mass_kg=mass
+    )
     s = analysis.get_summary_dict()
 
     print(
@@ -88,10 +92,7 @@ def _run_benchmark(
 
 
 def main() -> int:
-    print(
-        "\nApexVelocity Benchmark Suite\n"
-        "============================\n"
-    )
+    print("\nApexVelocity Benchmark Suite\n" "============================\n")
 
     benchmarks: List[Tuple[str, Tuple[float, float], Tuple[float, float], str]] = [
         (
@@ -109,8 +110,12 @@ def main() -> int:
     ]
 
     for name, start, end, place in benchmarks:
-        _run_benchmark(name, start, end, place, vehicle="tesla_model_3", condition="dry")
-        _run_benchmark(name, start, end, place, vehicle="tesla_model_3", condition="wet")
+        _run_benchmark(
+            name, start, end, place, vehicle="tesla_model_3", condition="dry"
+        )
+        _run_benchmark(
+            name, start, end, place, vehicle="tesla_model_3", condition="wet"
+        )
 
     print("\nDone.\n")
     return 0
@@ -118,5 +123,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-

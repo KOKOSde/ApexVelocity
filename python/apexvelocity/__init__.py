@@ -79,6 +79,7 @@ try:
         # Constants
         DEFAULT_CONFIG_DIR,
     )
+
     _HAS_CORE = True
 except ImportError as e:
     _HAS_CORE = False
@@ -106,6 +107,7 @@ def solve(*args, **kwargs):
       - max/min/avg speeds
     """
     return _solve(*args, **kwargs)
+
 
 # Optional: loader module (requires osmnx)
 try:
@@ -171,6 +173,7 @@ from .geometry import (
     CRSTransformer,
 )
 
+
 def check_core_available():
     """Check if the C++ core library is available."""
     if not _HAS_CORE:
@@ -181,12 +184,13 @@ def check_core_available():
         )
     return True
 
+
 __all__ = [
     # Version
     "__version__",
     # Types
     "MaterialProps",
-    "VehicleParams", 
+    "VehicleParams",
     "PathPoint",
     "SolverConfig",
     "PhysicsConstants",

@@ -134,27 +134,35 @@ NORDSCHLEIFE_TRACK = [
 
 def create_raw_track_path() -> List[Dict]:
     """Create raw Nürburgring path (before smoothing)."""
-    
+
     path_points = []
     cumulative_distance = 0.0
-    
+
     for i, (lat, lon) in enumerate(NORDSCHLEIFE_TRACK):
         if i > 0:
             prev = NORDSCHLEIFE_TRACK[i - 1]
             dlat = (lat - prev[0]) * 111320
             dlon = (lon - prev[1]) * 111320 * math.cos(math.radians(lat))
-            cumulative_distance += math.sqrt(dlat*dlat + dlon*dlon)
-        
-        path_points.append({
-            'lat': lat, 'lon': lon,
-            'x_m': 0, 'y_m': 0, 'z_m': 0, 'elevation_m': 0,
-            'curvature': 0.0,
-            'distance_along_m': cumulative_distance,
-            'surface_type': 'asphalt',
-            'speed_mps': 50.0, 'v_profile': 50.0,
-            'energy_joules': 0.0, 'energy_kwh': 0.0,
-        })
-    
+            cumulative_distance += math.sqrt(dlat * dlat + dlon * dlon)
+
+        path_points.append(
+            {
+                "lat": lat,
+                "lon": lon,
+                "x_m": 0,
+                "y_m": 0,
+                "z_m": 0,
+                "elevation_m": 0,
+                "curvature": 0.0,
+                "distance_along_m": cumulative_distance,
+                "surface_type": "asphalt",
+                "speed_mps": 50.0,
+                "v_profile": 50.0,
+                "energy_joules": 0.0,
+                "energy_kwh": 0.0,
+            }
+        )
+
     return path_points
 
 
@@ -166,7 +174,11 @@ def create_track_path() -> List[Dict]:
 
     # Import geometry module for smoothing
     try:
-        from apexvelocity.geometry import smooth_path_geo, recompute_curvature, get_path_stats
+        from apexvelocity.geometry import (
+            smooth_path_geo,
+            recompute_curvature,
+            get_path_stats,
+        )
     except ImportError:
         print("  ⚠ Geometry module not available, using raw path")
         return create_raw_track_path()
@@ -175,6 +187,7 @@ def create_track_path() -> List[Dict]:
     osm_points: List[Dict] = []
     try:
         from apexvelocity.osm_fetcher import get_nurburgring
+
         osm_points = get_nurburgring() or []
     except Exception as e:
         print(f"  ⚠ OSM fetch failed: {e}. Falling back to traced coords")
@@ -193,15 +206,21 @@ def create_track_path() -> List[Dict]:
     raw_stats = get_path_stats(raw_path)
     smooth_stats = get_path_stats(smooth_path)
 
-    print(f"    Raw path:    {raw_stats['point_count']} points, {raw_stats['total_distance_km']:.2f} km")
-    print(f"    Smooth path: {smooth_stats['point_count']} points, {smooth_stats['total_distance_km']:.2f} km")
+    print(
+        f"    Raw path:    {raw_stats['point_count']} points, {raw_stats['total_distance_km']:.2f} km"
+    )
+    print(
+        f"    Smooth path: {smooth_stats['point_count']} points, {smooth_stats['total_distance_km']:.2f} km"
+    )
     print(f"    Avg spacing: {smooth_stats['avg_spacing_m']:.1f}m")
     print(f"    Max curvature: {smooth_stats['max_curvature']:.4f} (1/m)")
 
     return smooth_path
 
 
-def solve_track(path_points: List[Dict], vehicle: Dict, friction_mult: float = 1.0) -> float:
+def solve_track(
+    path_points: List[Dict], vehicle: Dict, friction_mult: float = 1.0
+) -> float:
     """
     Solve velocity profile using the C++ core via the public API.
 
@@ -228,7 +247,9 @@ def solve_track(path_points: List[Dict], vehicle: Dict, friction_mult: float = 1
         coords.append((d, 0.0, 0.0))
         surfaces.append(pt.get("surface_type", "asphalt"))
 
-    result = av.solve(path=coords, surfaces=surfaces, vehicle="sports_car", condition=condition)
+    result = av.solve(
+        path=coords, surfaces=surfaces, vehicle="sports_car", condition=condition
+    )
 
     vp = result.velocity_profile_mps or []
     ej = result.energy_joules or []
@@ -246,7 +267,9 @@ def solve_track(path_points: List[Dict], vehicle: Dict, friction_mult: float = 1
     total_time = 0.0
     for i in range(1, len(path_points)):
         pt, prev = path_points[i], path_points[i - 1]
-        dist = float(pt.get("distance_along_m", 0.0)) - float(prev.get("distance_along_m", 0.0))
+        dist = float(pt.get("distance_along_m", 0.0)) - float(
+            prev.get("distance_along_m", 0.0)
+        )
         if dist <= 0.1:
             continue
         v_avg = 0.5 * (pt["speed_mps"] + prev["speed_mps"])
@@ -257,81 +280,103 @@ def solve_track(path_points: List[Dict], vehicle: Dict, friction_mult: float = 1
 
 
 def run_demo():
-    print("""
+    print(
+        """
 ╔══════════════════════════════════════════════════════════════════════╗
 ║   🏎️  NÜRBURGRING NORDSCHLEIFE BENCHMARK  🏎️                       ║
 ║   Testing: Friction model - Dry vs Wet conditions                    ║
 ╚══════════════════════════════════════════════════════════════════════╝
-""")
-    
-    mapbox_token = os.environ.get('MAPBOX_API_KEY')
+"""
+    )
+
+    mapbox_token = os.environ.get("MAPBOX_API_KEY")
     map_style = "satellite" if mapbox_token else "dark"
     print(f"🛰️  Map style: {map_style}")
-    
-    vehicle = {'name': 'Sports Car', 'mass_kg': 1500, 'max_power_w': 350000}
+
+    vehicle = {"name": "Sports Car", "mass_kg": 1500, "max_power_w": 350000}
     print(f"Vehicle: {vehicle['name']} ({vehicle['max_power_w']/1000:.0f} kW)")
-    
+
     # Create track with smoothing
     print("\nLoading Nordschleife track...")
     path_points = create_track_path()
-    total_km = path_points[-1]['distance_along_m'] / 1000
+    total_km = path_points[-1]["distance_along_m"] / 1000
     print(f"  ✓ {len(path_points)} waypoints, {total_km:.2f} km")
-    
+
     # Dry run
     path_dry = copy.deepcopy(path_points)
     lap_dry = solve_track(path_dry, vehicle, 1.0)
-    
+
     print(f"\n=== DRY (μ=0.9) ===")
     print(f"  Lap: {lap_dry:.1f}s ({lap_dry/60:.2f} min)")
     print(f"  Avg: {total_km*1000/lap_dry*3.6:.1f} km/h")
-    
+
     # Wet run
     path_wet = copy.deepcopy(path_points)
     lap_wet = solve_track(path_wet, vehicle, 0.7)
-    
+
     print(f"\n=== WET (μ=0.63) ===")
     print(f"  Lap: {lap_wet:.1f}s ({lap_wet/60:.2f} min)")
     print(f"  Avg: {total_km*1000/lap_wet*3.6:.1f} km/h")
-    
+
     delta = lap_wet - lap_dry
     pct = delta / lap_dry * 100
     print(f"\n=== RESULT ===")
     print(f"  Delta: +{delta:.1f}s ({pct:.1f}% slower)")
-    
+
     passed = lap_wet > lap_dry and pct > 5
     print(f"  {'✓ PASS' if passed else '✗ FAIL'}")
-    
+
     # Rich analysis with new features
     print("\n=== RICH FEATURE ANALYSIS ===")
     try:
         from apexvelocity.viz import visualize_profile, visualize_comparison
         from apexvelocity.analysis import analyze_profile
-        
-        analysis_dry = analyze_profile(path_dry, condition="dry", vehicle_mass_kg=vehicle['mass_kg'])
-        analysis_wet = analyze_profile(path_wet, condition="wet", friction_multiplier=0.7, 
-                                       vehicle_mass_kg=vehicle['mass_kg'])
-        
+
+        analysis_dry = analyze_profile(
+            path_dry, condition="dry", vehicle_mass_kg=vehicle["mass_kg"]
+        )
+        analysis_wet = analyze_profile(
+            path_wet,
+            condition="wet",
+            friction_multiplier=0.7,
+            vehicle_mass_kg=vehicle["mass_kg"],
+        )
+
         sd = analysis_dry.get_summary_dict()
         sw = analysis_wet.get_summary_dict()
-        
+
         print(f"\n  {'Metric':<22} {'DRY':>10} {'WET':>10}")
         print(f"  {'-'*22} {'-'*10} {'-'*10}")
-        print(f"  {'Max Lat G':<22} {sd['max_lateral_g']:>8.2f} g {sw['max_lateral_g']:>8.2f} g")
-        print(f"  {'p95 Lat G':<22} {sd['p95_lateral_g']:>8.2f} g {sw['p95_lateral_g']:>8.2f} g")
-        print(f"  {'Avg Friction Use':<22} {sd['avg_friction_usage']*100:>8.0f}% {sw['avg_friction_usage']*100:>8.0f}%")
-        print(f"  {'Comfort Viol/km':<22} {sd['comfort_violations_per_km']:>8.2f}  {sw['comfort_violations_per_km']:>8.2f}")
-        print(f"  {'Brake Zones':<22} {sd['brake_fraction']*100:>8.1f}% {sw['brake_fraction']*100:>8.1f}%")
-        print(f"  {'Difficulty':<22} {sd['difficulty_score']:>8.2f}  {sw['difficulty_score']:>8.2f}")
-        print(f"  {'Safety Margin':<22} {sd['safety_margin_score']:>8.2f}  {sw['safety_margin_score']:>8.2f}")
-        
+        print(
+            f"  {'Max Lat G':<22} {sd['max_lateral_g']:>8.2f} g {sw['max_lateral_g']:>8.2f} g"
+        )
+        print(
+            f"  {'p95 Lat G':<22} {sd['p95_lateral_g']:>8.2f} g {sw['p95_lateral_g']:>8.2f} g"
+        )
+        print(
+            f"  {'Avg Friction Use':<22} {sd['avg_friction_usage']*100:>8.0f}% {sw['avg_friction_usage']*100:>8.0f}%"
+        )
+        print(
+            f"  {'Comfort Viol/km':<22} {sd['comfort_violations_per_km']:>8.2f}  {sw['comfort_violations_per_km']:>8.2f}"
+        )
+        print(
+            f"  {'Brake Zones':<22} {sd['brake_fraction']*100:>8.1f}% {sw['brake_fraction']*100:>8.1f}%"
+        )
+        print(
+            f"  {'Difficulty':<22} {sd['difficulty_score']:>8.2f}  {sw['difficulty_score']:>8.2f}"
+        )
+        print(
+            f"  {'Safety Margin':<22} {sd['safety_margin_score']:>8.2f}  {sw['safety_margin_score']:>8.2f}"
+        )
+
         # Try to use the new interactive visualization with Mapbox
         try:
             from apexvelocity.viz import visualize_profile_interactive
-            
+
             # Get Mapbox token from environment
-            mapbox_token = os.environ.get('MAPBOX_API_KEY', '')
+            mapbox_token = os.environ.get("MAPBOX_API_KEY", "")
             style_type = "satellite-streets" if mapbox_token else "dark"
-            
+
             visualize_profile_interactive(
                 path_dry,
                 title="Nürburgring Nordschleife - DRY",
@@ -340,7 +385,7 @@ def run_demo():
                 style=style_type,
                 mapbox_token=mapbox_token,
             )
-            
+
             visualize_profile_interactive(
                 path_wet,
                 title="Nürburgring Nordschleife - WET",
@@ -351,40 +396,66 @@ def run_demo():
                 condition="wet",
                 friction_multiplier=0.7,
             )
-            
+
             # Also generate comparison (uses old method - still works)
-            visualize_comparison(path_dry, path_wet, label_a="DRY", label_b="WET",
-                                title="Dry vs Wet", output_html="nurburgring_comparison.html",
-                                style=map_style, friction_b=0.7)
-            
+            visualize_comparison(
+                path_dry,
+                path_wet,
+                label_a="DRY",
+                label_b="WET",
+                title="Dry vs Wet",
+                output_html="nurburgring_comparison.html",
+                style=map_style,
+                friction_b=0.7,
+            )
+
             print(f"\n  ✓ nurburgring_dry.html (🎛️ interactive color dropdown!)")
             print(f"  ✓ nurburgring_wet.html (🎛️ interactive color dropdown!)")
             print(f"  ✓ nurburgring_comparison.html")
             print(f"  🛰️  {'Satellite' if mapbox_token else 'Dark'} basemap")
             print(f"\n  Hover for full feature set!")
-            
+
         except Exception as e:
             print(f"  ⚠ Interactive viz failed ({e}), falling back to basic")
             # Fallback
-            visualize_profile(path_dry, color_by="difficulty", title="Nordschleife - DRY",
-                             output_html="nurburgring_dry.html", style=map_style)
-            visualize_profile(path_wet, color_by="friction", title="Nordschleife - WET",
-                             output_html="nurburgring_wet.html", style=map_style,
-                             condition="wet", friction_multiplier=0.7)
-            visualize_comparison(path_dry, path_wet, label_a="DRY", label_b="WET",
-                                title="Dry vs Wet", output_html="nurburgring_comparison.html",
-                                style=map_style, friction_b=0.7)
-            
+            visualize_profile(
+                path_dry,
+                color_by="difficulty",
+                title="Nordschleife - DRY",
+                output_html="nurburgring_dry.html",
+                style=map_style,
+            )
+            visualize_profile(
+                path_wet,
+                color_by="friction",
+                title="Nordschleife - WET",
+                output_html="nurburgring_wet.html",
+                style=map_style,
+                condition="wet",
+                friction_multiplier=0.7,
+            )
+            visualize_comparison(
+                path_dry,
+                path_wet,
+                label_a="DRY",
+                label_b="WET",
+                title="Dry vs Wet",
+                output_html="nurburgring_comparison.html",
+                style=map_style,
+                friction_b=0.7,
+            )
+
             print(f"\n  ✓ nurburgring_dry.html (color_by=difficulty)")
             print(f"  ✓ nurburgring_wet.html (color_by=friction)")
             print(f"  ✓ nurburgring_comparison.html")
             print(f"\n  Hover for full feature set!")
-        
+
     except Exception as e:
         print(f"\n  ⚠ Viz error: {e}")
         import traceback
+
         traceback.print_exc()
-    
+
     print("\nDone!\n")
     return 0 if passed else 1
 

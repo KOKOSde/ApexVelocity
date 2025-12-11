@@ -21,19 +21,23 @@ def _synthetic_curve() -> List[Dict]:
         dy = Rm * math.sin(rad)
         lat = lat0 + dy * deg_per_m_lat
         lon = lon0 + dx * deg_per_m_lon
-        pts.append({
-            'lat': lat,
-            'lon': lon,
-            'distance_along_m': 0.0,
-            'curvature': 0.0,
-        })
+        pts.append(
+            {
+                "lat": lat,
+                "lon": lon,
+                "distance_along_m": 0.0,
+                "curvature": 0.0,
+            }
+        )
     # distance_along_m (rough)
     cum = 0.0
     for i in range(1, len(pts)):
-        dlat = (pts[i]['lat'] - pts[i-1]['lat']) * 111320
-        dlon = (pts[i]['lon'] - pts[i-1]['lon']) * 111320 * math.cos(math.radians(lat0))
+        dlat = (pts[i]["lat"] - pts[i - 1]["lat"]) * 111320
+        dlon = (
+            (pts[i]["lon"] - pts[i - 1]["lon"]) * 111320 * math.cos(math.radians(lat0))
+        )
         cum += math.hypot(dlat, dlon)
-        pts[i]['distance_along_m'] = cum
+        pts[i]["distance_along_m"] = cum
     return pts
 
 
@@ -44,8 +48,7 @@ def test_smoothing_preserves_alignment_and_length():
     assert validate_path_alignment(raw, smoothed, max_offset_m=3.0)
 
     # Length within ~5%
-    L_raw = raw[-1]['distance_along_m']
-    L_smooth = smoothed[-1]['distance_along_m']
+    L_raw = raw[-1]["distance_along_m"]
+    L_smooth = smoothed[-1]["distance_along_m"]
     if L_raw > 0:
         assert abs(L_smooth - L_raw) / L_raw < 0.05
-

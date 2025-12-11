@@ -391,6 +391,31 @@ WET:  Lap time 15.9 min, Max speed 202 km/h
 ✓ PASS: Wet 11.9% slower (friction model validated)
 ```
 
+### nuScenes Validation (Optional)
+
+You can validate ApexVelocity against real-world nuScenes data and generate residuals for
+uncertainty training:
+
+- **Prerequisites**:
+  - Install the nuScenes devkit: `pip install nuscenes-devkit`
+  - Download the nuScenes dataset separately and note the `dataroot` path.
+- **Run validation and export residuals**:
+
+  ```bash
+  cd python
+  python -m validation.validate_nuscenes \
+      --dataroot /path/to/nuscenes \
+      --version v1.0-mini \
+      --split train \
+      --max-scenes 10 \
+      --vehicle tesla_model_3 \
+      --condition dry \
+      --output validation/nuscenes_residuals.csv
+  ```
+
+The resulting CSV is directly compatible with `validation.uncertainty_training` and can be
+used to train a dataset-specific uncertainty model.
+
 ## Physics Model
 
 ### Friction-Limited Cornering Speed
@@ -419,6 +444,50 @@ F_grade = m · g · sin(θ)
 1. **Static Limits**: Compute max speed at each point from curvature + friction
 2. **Backward Pass**: Propagate braking constraints from end to start
 3. **Forward Pass**: Propagate acceleration constraints from start to end
+
+### Uncertainty Quantification (Research)
+
+For research workflows you can attach **confidence intervals** around the physics-based speed profile:
+
+- **Generate residuals** (ground-truth vs ApexVelocity predictions) into a CSV with at least:
+  - `speed_kmh_true`, `speed_kmh_pred`
+  - `curvature_1pm`, `grade_percent`, `physics_limit_kmh`
+  - `friction_mu_effective`, `energy_kwh_per_km`
+- **Train an uncertainty model**:
+
+  ```bash
+  cd python
+  python -m validation.uncertainty_training \
+      --csv path/to/residuals.csv \
+      --output models/uncertainty_model.joblib \
+      --coverage 0.9
+  ```
+
+- **Use the model at inference time**:
+
+  ```python
+  from apexvelocity.analysis import analyze_profile
+  from apexvelocity.uncertainty import load_uncertainty_model, predict_speed_intervals
+
+  analysis = analyze_profile(path_points)
+  # If you saved the model under python/models/:
+  import joblib
+  bundle = joblib.load("python/models/uncertainty_model.joblib")
+  model = bundle["model"]
+  meta = bundle["metadata"]
+
+  intervals = predict_speed_intervals(
+      analysis.segments,
+      model=model,
+      nominal_coverage=meta["nominal_coverage"],
+      coverage_scale=meta["coverage_scale"],
+  )
+  # intervals[i].speed_kmh_low / speed_kmh_high now approximate a 90% band
+  ```
+
+The default repo does **not** ship a nuScenes-trained model; you are expected to
+run the training script against your own validation dataset and, if desired,
+check in the resulting `uncertainty_model.joblib` for reproducible research.
 
 ## Contributing
 

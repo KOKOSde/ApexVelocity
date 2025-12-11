@@ -123,8 +123,10 @@ def build_route(request: RouteRequest) -> List[Dict]:
                     best_d2 = float("inf")
                     for i, c in enumerate(ordered):
                         dy = (c["lat"] - target_lat) * 111320.0
-                        dx = (c["lon"] - target_lon) * 111320.0 * math.cos(
-                            math.radians(target_lat)
+                        dx = (
+                            (c["lon"] - target_lon)
+                            * 111320.0
+                            * math.cos(math.radians(target_lat))
                         )
                         d2 = dx * dx + dy * dy
                         if d2 < best_d2:
@@ -140,7 +142,9 @@ def build_route(request: RouteRequest) -> List[Dict]:
                 else:
                     segment = list(reversed(ordered[e_idx : s_idx + 1]))
 
-                pts = build_path_points(segment, surface_type="asphalt", base_elevation=0.0)
+                pts = build_path_points(
+                    segment, surface_type="asphalt", base_elevation=0.0
+                )
 
                 # Build a tiny OSM graph over the crooked block to sample both
                 # elevation (from DEM, if configured) and speed limits from
@@ -162,12 +166,13 @@ def build_route(request: RouteRequest) -> List[Dict]:
                         )
 
                         # Optional: attach real elevation from DEM if configured
-                        elev_method = (
-                            os.environ.get("APEXVELOCITY_FAST_TESTS") != "1"
-                            and os.environ.get("APEXVELOCITY_ELEVATION_METHOD")
-                        )
+                        elev_method = os.environ.get(
+                            "APEXVELOCITY_FAST_TESTS"
+                        ) != "1" and os.environ.get("APEXVELOCITY_ELEVATION_METHOD")
                         if elev_method:
-                            G_meta = loader.add_elevation(G_meta, method=str(elev_method))
+                            G_meta = loader.add_elevation(
+                                G_meta, method=str(elev_method)
+                            )
 
                         # Cache node elevations keyed by (lat, lon)
                         for nid, data in G_meta.nodes(data=True):
@@ -192,7 +197,9 @@ def build_route(request: RouteRequest) -> List[Dict]:
                                 if not edge_dict:
                                     continue
                                 # Handle multi-edges (0, 1, ...)
-                                edge_data = edge_dict[0] if 0 in edge_dict else edge_dict
+                                edge_data = (
+                                    edge_dict[0] if 0 in edge_dict else edge_dict
+                                )
                                 maxspeed = edge_data.get("maxspeed")
                                 if not maxspeed:
                                     continue
@@ -201,9 +208,14 @@ def build_route(request: RouteRequest) -> List[Dict]:
                                 try:
                                     s_val = str(maxspeed)
                                     if "mph" in s_val:
-                                        s_num = float(s_val.replace(" mph", "").strip()) * 1.60934
+                                        s_num = (
+                                            float(s_val.replace(" mph", "").strip())
+                                            * 1.60934
+                                        )
                                     elif "km/h" in s_val:
-                                        s_num = float(s_val.replace(" km/h", "").strip())
+                                        s_num = float(
+                                            s_val.replace(" km/h", "").strip()
+                                        )
                                     else:
                                         s_num = float(s_val.strip())
                                     speeds.append(s_num)
@@ -217,7 +229,9 @@ def build_route(request: RouteRequest) -> List[Dict]:
                         node_elevations = {}
                         node_speed_limits = {}
 
-                def _nearest_elevation(lat: float, lon: float, default: float = 0.0) -> float:
+                def _nearest_elevation(
+                    lat: float, lon: float, default: float = 0.0
+                ) -> float:
                     if not node_elevations:
                         return default
                     best = None
@@ -231,7 +245,9 @@ def build_route(request: RouteRequest) -> List[Dict]:
                             best = z
                     return default if best is None else best
 
-                def _nearest_speed_limit(lat: float, lon: float, default: Optional[float] = None) -> Optional[float]:
+                def _nearest_speed_limit(
+                    lat: float, lon: float, default: Optional[float] = None
+                ) -> Optional[float]:
                     if not node_speed_limits:
                         return default
                     best = None
@@ -261,7 +277,11 @@ def build_route(request: RouteRequest) -> List[Dict]:
                             for nbr, edge_dict in G_meta[nid].items():
                                 if not edge_dict:
                                     continue
-                                edge_data = edge_dict[0] if 0 in edge_dict else list(edge_dict.values())[0]
+                                edge_data = (
+                                    edge_dict[0]
+                                    if 0 in edge_dict
+                                    else list(edge_dict.values())[0]
+                                )
                                 highway = edge_data.get("highway", "") or ""
                                 surface = edge_data.get("surface", "") or ""
                                 tracktype = edge_data.get("tracktype", "") or ""
@@ -284,7 +304,9 @@ def build_route(request: RouteRequest) -> List[Dict]:
                     except Exception:
                         node_surfaces = {}
 
-                def _nearest_surface(lat: float, lon: float, default: str = "asphalt") -> str:
+                def _nearest_surface(
+                    lat: float, lon: float, default: str = "asphalt"
+                ) -> str:
                     if not node_surfaces:
                         return default
                     best = None
@@ -302,7 +324,9 @@ def build_route(request: RouteRequest) -> List[Dict]:
                     # Elevation and speed limit come from nearest sampled node.
                     base_z = p.get("z_m", 0.0)
                     z = _nearest_elevation(p["lat"], p["lon"], default=base_z)
-                    s_lim = _nearest_speed_limit(p["lat"], p["lon"], default=p.get("speed_limit_kmh"))
+                    s_lim = _nearest_speed_limit(
+                        p["lat"], p["lon"], default=p.get("speed_limit_kmh")
+                    )
                     surface_type = _nearest_surface(
                         p["lat"],
                         p["lon"],
@@ -322,7 +346,7 @@ def build_route(request: RouteRequest) -> List[Dict]:
                             "surface_type": surface_type,
                             "surface_inferred": False,
                             "grade_angle_rad": 0.0,  # will be recomputed in analysis
-                            "grade_percent": 0.0,    # derived later from z_m
+                            "grade_percent": 0.0,  # derived later from z_m
                             "osm_highway": "residential",
                             "osm_surface": surface_type,
                             "osm_speed_limit_kmh": s_lim,
@@ -340,7 +364,9 @@ def build_route(request: RouteRequest) -> List[Dict]:
     if not raw_points:
         # Generic OSMLoader-based route
         if request.place_hint:
-            G = loader.graph_from_place(request.place_hint, network_type=request.network_type)
+            G = loader.graph_from_place(
+                request.place_hint, network_type=request.network_type
+            )
         else:
             # Small bbox around start/end if no place hint is provided
             lat1, lon1 = request.start
@@ -349,12 +375,14 @@ def build_route(request: RouteRequest) -> List[Dict]:
             south = min(lat1, lat2) - 0.01
             east = max(lon1, lon2) + 0.01
             west = min(lon1, lon2) + 0.01
-            G = loader.graph_from_bbox(north, south, east, west, network_type=request.network_type)
+            G = loader.graph_from_bbox(
+                north, south, east, west, network_type=request.network_type
+            )
 
         # Optionally add real elevation/grade from configured DEM provider
-        elev_method = os.environ.get("APEXVELOCITY_FAST_TESTS") != "1" and os.environ.get(
-            "APEXVELOCITY_ELEVATION_METHOD"
-        )
+        elev_method = os.environ.get(
+            "APEXVELOCITY_FAST_TESTS"
+        ) != "1" and os.environ.get("APEXVELOCITY_ELEVATION_METHOD")
         if elev_method:
             try:
                 G = loader.add_elevation(G, method=str(elev_method))
@@ -363,7 +391,9 @@ def build_route(request: RouteRequest) -> List[Dict]:
                 pass
 
         # Find route using shortest path on the road network
-        route = loader.get_shortest_path(G, origin=request.start, destination=request.end)
+        route = loader.get_shortest_path(
+            G, origin=request.start, destination=request.end
+        )
         loaded = loader.extract_path(G, route)
 
         for pt in loaded.points:
@@ -401,9 +431,12 @@ def build_route(request: RouteRequest) -> List[Dict]:
     # city routes, we stick to LineString interpolation so that straight
     # segments and right-angle turns remain visually straight and aligned
     # with the underlying road grid.
-    smooth_mode = "catmull_rom" if raw_points and _is_lombard_area(
-        request.start, request.end, request.place_hint or ""
-    ) else "linestring"
+    smooth_mode = (
+        "catmull_rom"
+        if raw_points
+        and _is_lombard_area(request.start, request.end, request.place_hint or "")
+        else "linestring"
+    )
 
     smoothed = smooth_path_geo(
         raw_points,
@@ -423,5 +456,3 @@ def build_route(request: RouteRequest) -> List[Dict]:
         pass
 
     return smoothed
-
-

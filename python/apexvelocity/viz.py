@@ -16,6 +16,7 @@ import warnings
 
 try:
     import pydeck as pdk
+
     _HAS_PYDECK = True
 except ImportError:
     _HAS_PYDECK = False
@@ -23,6 +24,7 @@ except ImportError:
 
 try:
     from .analysis import analyze_profile, ProfileAnalysis, SegmentFeatures
+
     _HAS_ANALYSIS = True
 except ImportError:
     _HAS_ANALYSIS = False
@@ -33,102 +35,102 @@ except ImportError:
 # "satellite" requires MAPBOX_API_KEY
 MAP_STYLES = {
     # Mapbox styles (require API key)
-    'satellite': 'mapbox://styles/mapbox/satellite-streets-v12',
-    'satellite-plain': 'mapbox://styles/mapbox/satellite-v9',
-    'mapbox-dark': 'mapbox://styles/mapbox/dark-v11',
-    'mapbox-light': 'mapbox://styles/mapbox/light-v11',
-    'streets': 'mapbox://styles/mapbox/streets-v12',
-    'outdoors': 'mapbox://styles/mapbox/outdoors-v12',
+    "satellite": "mapbox://styles/mapbox/satellite-streets-v12",
+    "satellite-plain": "mapbox://styles/mapbox/satellite-v9",
+    "mapbox-dark": "mapbox://styles/mapbox/dark-v11",
+    "mapbox-light": "mapbox://styles/mapbox/light-v11",
+    "streets": "mapbox://styles/mapbox/streets-v12",
+    "outdoors": "mapbox://styles/mapbox/outdoors-v12",
     # Free styles (no API key needed)
-    'osm': None,  # Will use TileLayer
-    'dark': None,  # Will use dark TileLayer
-    'light': None,  # Will use light TileLayer
+    "osm": None,  # Will use TileLayer
+    "dark": None,  # Will use dark TileLayer
+    "light": None,  # Will use light TileLayer
 }
 
 # Free tile providers (no API key needed)
 TILE_PROVIDERS = {
-    'osm': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    'dark': 'https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
-    'light': 'https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+    "osm": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "dark": "https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png",
+    "light": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
 }
 
 # Color palettes (RGBA)
 # Each palette defines low/mid/high colors for gradient interpolation
 COLOR_PALETTES = {
-    'speed': {
-        'low': [220, 53, 69, 255],    # Red = slow
-        'mid': [255, 193, 7, 255],    # Yellow = medium
-        'high': [40, 167, 69, 255],   # Green = fast
+    "speed": {
+        "low": [220, 53, 69, 255],  # Red = slow
+        "mid": [255, 193, 7, 255],  # Yellow = medium
+        "high": [40, 167, 69, 255],  # Green = fast
     },
-    'energy': {
-        'low': [40, 167, 69, 255],    # Green = efficient
-        'mid': [255, 193, 7, 255],    # Yellow = moderate
-        'high': [220, 53, 69, 255],   # Red = high consumption
+    "energy": {
+        "low": [40, 167, 69, 255],  # Green = efficient
+        "mid": [255, 193, 7, 255],  # Yellow = moderate
+        "high": [220, 53, 69, 255],  # Red = high consumption
     },
-    'gforce': {
-        'low': [52, 152, 219, 255],   # Blue = low G
-        'mid': [155, 89, 182, 255],   # Purple = medium G
-        'high': [220, 53, 69, 255],   # Red = high G
+    "gforce": {
+        "low": [52, 152, 219, 255],  # Blue = low G
+        "mid": [155, 89, 182, 255],  # Purple = medium G
+        "high": [220, 53, 69, 255],  # Red = high G
     },
-    'lateral_g': {
-        'low': [52, 152, 219, 255],   # Blue = low lateral G
-        'mid': [155, 89, 182, 255],   # Purple = medium
-        'high': [220, 53, 69, 255],   # Red = high lateral G
+    "lateral_g": {
+        "low": [52, 152, 219, 255],  # Blue = low lateral G
+        "mid": [155, 89, 182, 255],  # Purple = medium
+        "high": [220, 53, 69, 255],  # Red = high lateral G
     },
-    'longitudinal_g': {
-        'low': [40, 167, 69, 255],    # Green = acceleration
-        'mid': [255, 193, 7, 255],    # Yellow = coast
-        'high': [220, 53, 69, 255],   # Red = braking
+    "longitudinal_g": {
+        "low": [40, 167, 69, 255],  # Green = acceleration
+        "mid": [255, 193, 7, 255],  # Yellow = coast
+        "high": [220, 53, 69, 255],  # Red = braking
     },
-    'friction': {
-        'low': [40, 167, 69, 255],    # Green = low usage
-        'mid': [255, 193, 7, 255],    # Yellow = moderate
-        'high': [220, 53, 69, 255],   # Red = near limit
+    "friction": {
+        "low": [40, 167, 69, 255],  # Green = low usage
+        "mid": [255, 193, 7, 255],  # Yellow = moderate
+        "high": [220, 53, 69, 255],  # Red = near limit
     },
-    'comfort': {
-        'low': [40, 167, 69, 255],    # Green = comfortable
-        'mid': [255, 193, 7, 255],    # Yellow = moderate
-        'high': [220, 53, 69, 255],   # Red = uncomfortable
+    "comfort": {
+        "low": [40, 167, 69, 255],  # Green = comfortable
+        "mid": [255, 193, 7, 255],  # Yellow = moderate
+        "high": [220, 53, 69, 255],  # Red = uncomfortable
     },
-    'difficulty': {
-        'low': [52, 152, 219, 255],   # Blue = easy
-        'mid': [155, 89, 182, 255],   # Purple = moderate
-        'high': [220, 53, 69, 255],   # Red = difficult
+    "difficulty": {
+        "low": [52, 152, 219, 255],  # Blue = easy
+        "mid": [155, 89, 182, 255],  # Purple = moderate
+        "high": [220, 53, 69, 255],  # Red = difficult
     },
-    'safety_margin': {
-        'low': [220, 53, 69, 255],    # Red = low safety margin (dangerous)
-        'mid': [255, 193, 7, 255],    # Yellow = moderate
-        'high': [40, 167, 69, 255],   # Green = high safety margin (safe)
+    "safety_margin": {
+        "low": [220, 53, 69, 255],  # Red = low safety margin (dangerous)
+        "mid": [255, 193, 7, 255],  # Yellow = moderate
+        "high": [40, 167, 69, 255],  # Green = high safety margin (safe)
     },
-    'regen': {
-        'low': [128, 128, 128, 255],  # Gray = no regen
-        'mid': [52, 152, 219, 255],   # Blue = some regen
-        'high': [40, 167, 69, 255],   # Green = high regen potential
+    "regen": {
+        "low": [128, 128, 128, 255],  # Gray = no regen
+        "mid": [52, 152, 219, 255],  # Blue = some regen
+        "high": [40, 167, 69, 255],  # Green = high regen potential
     },
-    'action': {
-        'BRAKE': [220, 53, 69, 255],
-        'EASE_OFF': [255, 140, 0, 255],
-        'EASE OFF': [255, 140, 0, 255],
-        'COAST': [52, 152, 219, 255],
-        'ACCELERATE': [40, 167, 69, 255],
-        'HOLD': [128, 128, 128, 255],
-        'SMOOTH': [155, 89, 182, 255],
+    "action": {
+        "BRAKE": [220, 53, 69, 255],
+        "EASE_OFF": [255, 140, 0, 255],
+        "EASE OFF": [255, 140, 0, 255],
+        "COAST": [52, 152, 219, 255],
+        "ACCELERATE": [40, 167, 69, 255],
+        "HOLD": [128, 128, 128, 255],
+        "SMOOTH": [155, 89, 182, 255],
     },
 }
 
 # Map color_by names to segment data fields
 COLOR_BY_FIELDS = {
-    'speed': 'speed_kmh',
-    'energy': 'energy_kwh_per_km',
-    'lateral_g': 'lateral_g',
-    'longitudinal_g': 'longitudinal_g',
-    'gforce': 'lateral_g',  # Alias
-    'friction': 'friction_usage',
-    'comfort': 'comfort_score',
-    'difficulty': 'difficulty_score',
-    'safety_margin': 'safety_margin',
-    'regen': 'regen_potential_j',
-    'action': 'recommended_action',
+    "speed": "speed_kmh",
+    "energy": "energy_kwh_per_km",
+    "lateral_g": "lateral_g",
+    "longitudinal_g": "longitudinal_g",
+    "gforce": "lateral_g",  # Alias
+    "friction": "friction_usage",
+    "comfort": "comfort_score",
+    "difficulty": "difficulty_score",
+    "safety_margin": "safety_margin",
+    "regen": "regen_potential_j",
+    "action": "recommended_action",
 }
 
 
@@ -136,20 +138,21 @@ def _check_pydeck():
     """Ensure pydeck is available."""
     if not _HAS_PYDECK:
         raise ImportError(
-            "pydeck is required for visualization.\n"
-            "Install with: pip install pydeck"
+            "pydeck is required for visualization.\n" "Install with: pip install pydeck"
         )
 
 
 def _get_mapbox_token() -> Optional[str]:
     """Get Mapbox API token from environment (optional)."""
-    return os.environ.get('MAPBOX_API_KEY') or os.environ.get('MAPBOX_ACCESS_TOKEN')
+    return os.environ.get("MAPBOX_API_KEY") or os.environ.get("MAPBOX_ACCESS_TOKEN")
 
 
-def _get_basemap_layer(style: str) -> Tuple[Optional[str], Optional[Any], Optional[str]]:
+def _get_basemap_layer(
+    style: str,
+) -> Tuple[Optional[str], Optional[Any], Optional[str]]:
     """
     Get basemap configuration based on style.
-    
+
     Returns:
         (map_style, tile_layer, mapbox_token)
         - map_style: Mapbox style URL or None
@@ -157,23 +160,38 @@ def _get_basemap_layer(style: str) -> Tuple[Optional[str], Optional[Any], Option
         - mapbox_token: Token if needed, else None
     """
     mapbox_token = _get_mapbox_token()
-    
+
     # Check if this is a Mapbox style that needs a token
-    mapbox_styles = ['satellite', 'satellite-plain', 'mapbox-dark', 'mapbox-light', 'streets', 'outdoors']
-    
+    mapbox_styles = [
+        "satellite",
+        "satellite-plain",
+        "mapbox-dark",
+        "mapbox-light",
+        "streets",
+        "outdoors",
+    ]
+
     if style in mapbox_styles:
         if mapbox_token:
             # Use Mapbox style
             return MAP_STYLES[style], None, mapbox_token
         else:
             # Fallback to free alternative
-            fallback = 'dark' if 'dark' in style else 'osm'
-            print(f"⚠️  MAPBOX_API_KEY not set. Using free '{fallback}' style instead of '{style}'.", 
-                  file=sys.stderr)
-            print("   For satellite imagery, set: export MAPBOX_API_KEY='your_token'", file=sys.stderr)
-            print("   Get a free token at: https://account.mapbox.com/access-tokens/\n", file=sys.stderr)
+            fallback = "dark" if "dark" in style else "osm"
+            print(
+                f"⚠️  MAPBOX_API_KEY not set. Using free '{fallback}' style instead of '{style}'.",
+                file=sys.stderr,
+            )
+            print(
+                "   For satellite imagery, set: export MAPBOX_API_KEY='your_token'",
+                file=sys.stderr,
+            )
+            print(
+                "   Get a free token at: https://account.mapbox.com/access-tokens/\n",
+                file=sys.stderr,
+            )
             style = fallback
-    
+
     # Free tile-based styles
     if style in TILE_PROVIDERS:
         tile_url = TILE_PROVIDERS[style]
@@ -186,11 +204,11 @@ def _get_basemap_layer(style: str) -> Tuple[Optional[str], Optional[Any], Option
             opacity=1.0,
         )
         return None, tile_layer, None
-    
+
     # Default fallback
     tile_layer = pdk.Layer(
         "TileLayer",
-        data=TILE_PROVIDERS['osm'],
+        data=TILE_PROVIDERS["osm"],
         min_zoom=0,
         max_zoom=19,
         tile_size=256,
@@ -201,14 +219,14 @@ def _get_basemap_layer(style: str) -> Tuple[Optional[str], Optional[Any], Option
 def _interpolate_color(t: float, palette: Dict[str, List[int]]) -> List[int]:
     """Interpolate between colors based on t (0-1)."""
     t = max(0, min(1, t))
-    
+
     if t < 0.5:
         t2 = t * 2
-        c1, c2 = palette['low'], palette['mid']
+        c1, c2 = palette["low"], palette["mid"]
     else:
         t2 = (t - 0.5) * 2
-        c1, c2 = palette['mid'], palette['high']
-    
+        c1, c2 = palette["mid"], palette["high"]
+
     return [
         int(c1[0] + t2 * (c2[0] - c1[0])),
         int(c1[1] + t2 * (c2[1] - c1[1])),
@@ -219,77 +237,78 @@ def _interpolate_color(t: float, palette: Dict[str, List[int]]) -> List[int]:
 
 def _get_color_for_segment(seg: Dict, mode: str, stats: Dict) -> List[int]:
     """Get color for a segment based on visualization mode (color_by)."""
-    
+
     # Handle action mode separately (categorical, not gradient)
     if mode == "action":
-        action = seg.get('recommended_action', 'HOLD')
-        return COLOR_PALETTES['action'].get(action, COLOR_PALETTES['action']['HOLD'])
-    
+        action = seg.get("recommended_action", "HOLD")
+        return COLOR_PALETTES["action"].get(action, COLOR_PALETTES["action"]["HOLD"])
+
     # Get value and range based on mode
     if mode == "speed":
-        val = seg.get('speed_kmh', 0)
-        min_v, max_v = stats.get('min_speed', 0), stats.get('max_speed', 100)
+        val = seg.get("speed_kmh", 0)
+        min_v, max_v = stats.get("min_speed", 0), stats.get("max_speed", 100)
     elif mode == "energy":
-        val = seg.get('energy_kwh_per_km', 0)
-        min_v, max_v = 0, max(stats.get('max_energy_intensity', 500), 0.001)
+        val = seg.get("energy_kwh_per_km", 0)
+        min_v, max_v = 0, max(stats.get("max_energy_intensity", 500), 0.001)
     elif mode in ("gforce", "lateral_g"):
-        val = seg.get('lateral_g', 0)
-        min_v, max_v = 0, max(stats.get('max_lateral_g', 1.0), 0.001)
+        val = seg.get("lateral_g", 0)
+        min_v, max_v = 0, max(stats.get("max_lateral_g", 1.0), 0.001)
     elif mode == "longitudinal_g":
-        val = abs(seg.get('longitudinal_g', 0))
-        min_v, max_v = 0, max(stats.get('max_longitudinal_g', 0.5), 0.001)
+        val = abs(seg.get("longitudinal_g", 0))
+        min_v, max_v = 0, max(stats.get("max_longitudinal_g", 0.5), 0.001)
     elif mode == "friction":
-        val = seg.get('friction_usage', 0)
+        val = seg.get("friction_usage", 0)
         min_v, max_v = 0, 1.0
     elif mode == "comfort":
         # Use per-route comfort range so we don't end up solid red when the
         # whole route is merely "bad but not maxed out".
-        val = seg.get('comfort_score', 0)
-        min_v = stats.get('min_comfort', 0.0)
-        max_v = stats.get('max_comfort', 1.0)
+        val = seg.get("comfort_score", 0)
+        min_v = stats.get("min_comfort", 0.0)
+        max_v = stats.get("max_comfort", 1.0)
     elif mode == "difficulty":
         # Difficulty provided directly by analysis; scale to local min/max.
-        val = seg.get('difficulty_score', 0)
-        min_v = stats.get('min_difficulty', 0.0)
-        max_v = stats.get('max_difficulty', 1.0)
+        val = seg.get("difficulty_score", 0)
+        min_v = stats.get("min_difficulty", 0.0)
+        max_v = stats.get("max_difficulty", 1.0)
     elif mode == "safety_margin":
         # Safety margin already encoded per segment.
-        val = seg.get('safety_margin', 0)
-        min_v = stats.get('min_safety_margin', 0.0)
-        max_v = stats.get('max_safety_margin', 1.0)
+        val = seg.get("safety_margin", 0)
+        min_v = stats.get("min_safety_margin", 0.0)
+        max_v = stats.get("max_safety_margin", 1.0)
     elif mode == "regen":
-        val = seg.get('regen_potential_j', 0)
-        min_v = stats.get('min_regen', 0.0)
-        max_v = stats.get('max_regen', max(stats.get('max_regen', 0.0), 1.0))
+        val = seg.get("regen_potential_j", 0)
+        min_v = stats.get("min_regen", 0.0)
+        max_v = stats.get("max_regen", max(stats.get("max_regen", 0.0), 1.0))
     else:
         # Default to speed
-        val = seg.get('speed_kmh', 0)
-        min_v, max_v = stats.get('min_speed', 0), stats.get('max_speed', 100)
-    
+        val = seg.get("speed_kmh", 0)
+        min_v, max_v = stats.get("min_speed", 0), stats.get("max_speed", 100)
+
     # Normalize to [0, 1]
     if max_v > min_v:
         t = (val - min_v) / (max_v - min_v)
     else:
         t = 0.5
     t = max(0.0, min(1.0, t))  # Clamp
-    
-    palette = COLOR_PALETTES.get(mode, COLOR_PALETTES['speed'])
+
+    palette = COLOR_PALETTES.get(mode, COLOR_PALETTES["speed"])
     return _interpolate_color(t, palette)
 
 
-def _compute_view_state(lats: List[float], lons: List[float], 
-                         pitch: float = 45, bearing: float = 0) -> Any:
+def _compute_view_state(
+    lats: List[float], lons: List[float], pitch: float = 45, bearing: float = 0
+) -> Any:
     """Compute optimal view state to fit all points."""
     if not lats or not lons:
         return pdk.ViewState(latitude=0, longitude=0, zoom=10)
-    
+
     center_lat = sum(lats) / len(lats)
     center_lon = sum(lons) / len(lons)
-    
+
     lat_range = max(lats) - min(lats)
     lon_range = max(lons) - min(lons)
     max_range = max(lat_range, lon_range)
-    
+
     if max_range > 0.5:
         zoom = 9
     elif max_range > 0.2:
@@ -306,7 +325,7 @@ def _compute_view_state(lats: List[float], lons: List[float],
         zoom = 15
     else:
         zoom = 16
-    
+
     return pdk.ViewState(
         latitude=center_lat,
         longitude=center_lon,
@@ -325,178 +344,218 @@ def _build_path_data(
     """Build path data for visualization."""
     if len(segments) < 2:
         return [], {}
-    
-    speeds = [s.get('speed_kmh', 0) for s in segments if s.get('speed_kmh', 0) > 0]
-    lateral_gs = [s.get('lateral_g', 0) for s in segments]
-    friction_usages = [s.get('friction_usage', 0) for s in segments]
-    energy_intensities = [s.get('energy_kwh_per_km', 0) for s in segments]
-    comfort_scores = [s.get('comfort_score', 0) for s in segments if s.get('comfort_score') is not None]
-    difficulty_scores = [s.get('difficulty_score', 0) for s in segments if s.get('difficulty_score') is not None]
-    safety_margins = [s.get('safety_margin', 0) for s in segments if s.get('safety_margin') is not None]
-    regen_values = [s.get('regen_potential_j', 0) for s in segments if s.get('regen_potential_j')]
-    
+
+    speeds = [s.get("speed_kmh", 0) for s in segments if s.get("speed_kmh", 0) > 0]
+    lateral_gs = [s.get("lateral_g", 0) for s in segments]
+    friction_usages = [s.get("friction_usage", 0) for s in segments]
+    energy_intensities = [s.get("energy_kwh_per_km", 0) for s in segments]
+    comfort_scores = [
+        s.get("comfort_score", 0)
+        for s in segments
+        if s.get("comfort_score") is not None
+    ]
+    difficulty_scores = [
+        s.get("difficulty_score", 0)
+        for s in segments
+        if s.get("difficulty_score") is not None
+    ]
+    safety_margins = [
+        s.get("safety_margin", 0)
+        for s in segments
+        if s.get("safety_margin") is not None
+    ]
+    regen_values = [
+        s.get("regen_potential_j", 0) for s in segments if s.get("regen_potential_j")
+    ]
+
     stats = {
-        'min_speed': min(speeds) if speeds else 0,
-        'max_speed': max(speeds) if speeds else 100,
-        'avg_speed': sum(speeds) / len(speeds) if speeds else 0,
-        'max_lateral_g': max(lateral_gs) if lateral_gs else 1.0,
-        'avg_lateral_g': sum(lateral_gs) / len(lateral_gs) if lateral_gs else 0,
-        'max_friction_usage': max(friction_usages) if friction_usages else 1.0,
-        'max_energy_intensity': max(e for e in energy_intensities if e > 0) if any(e > 0 for e in energy_intensities) else 500,
+        "min_speed": min(speeds) if speeds else 0,
+        "max_speed": max(speeds) if speeds else 100,
+        "avg_speed": sum(speeds) / len(speeds) if speeds else 0,
+        "max_lateral_g": max(lateral_gs) if lateral_gs else 1.0,
+        "avg_lateral_g": sum(lateral_gs) / len(lateral_gs) if lateral_gs else 0,
+        "max_friction_usage": max(friction_usages) if friction_usages else 1.0,
+        "max_energy_intensity": max(e for e in energy_intensities if e > 0)
+        if any(e > 0 for e in energy_intensities)
+        else 500,
         # Dynamic ranges for non-speed metrics so the legend/colormap uses
         # the full range of values present on this route instead of always
         # saturating to red.
-        'min_comfort': min(comfort_scores) if comfort_scores else 0.0,
-        'max_comfort': max(comfort_scores) if comfort_scores else 1.0,
-        'min_difficulty': min(difficulty_scores) if difficulty_scores else 0.0,
-        'max_difficulty': max(difficulty_scores) if difficulty_scores else 1.0,
-        'min_safety_margin': min(safety_margins) if safety_margins else 0.0,
-        'max_safety_margin': max(safety_margins) if safety_margins else 1.0,
-        'min_regen': min(regen_values) if regen_values else 0.0,
-        'max_regen': max(regen_values) if regen_values else 0.0,
+        "min_comfort": min(comfort_scores) if comfort_scores else 0.0,
+        "max_comfort": max(comfort_scores) if comfort_scores else 1.0,
+        "min_difficulty": min(difficulty_scores) if difficulty_scores else 0.0,
+        "max_difficulty": max(difficulty_scores) if difficulty_scores else 1.0,
+        "min_safety_margin": min(safety_margins) if safety_margins else 0.0,
+        "max_safety_margin": max(safety_margins) if safety_margins else 1.0,
+        "min_regen": min(regen_values) if regen_values else 0.0,
+        "max_regen": max(regen_values) if regen_values else 0.0,
     }
-    
+
     path_data = []
-    
+
     for i in range(len(segments) - 1):
         seg1 = segments[i]
         seg2 = segments[i + 1]
-        
-        lat1, lon1 = seg1.get('lat', 0), seg1.get('lon', 0)
-        lat2, lon2 = seg2.get('lat', 0), seg2.get('lon', 0)
-        
+
+        lat1, lon1 = seg1.get("lat", 0), seg1.get("lon", 0)
+        lat2, lon2 = seg2.get("lat", 0), seg2.get("lon", 0)
+
         if abs(lat1) < 0.001 and abs(lon1) < 0.001:
             continue
         if abs(lat2) < 0.001 and abs(lon2) < 0.001:
             continue
-        
+
         avg_seg = {
             # Speed
-            'speed_kmh': (seg1.get('speed_kmh', 0) + seg2.get('speed_kmh', 0)) / 2,
-            'physics_limit_kmh': (seg1.get('physics_limit_kmh', 100) + seg2.get('physics_limit_kmh', 100)) / 2,
-            'speed_ratio': (seg1.get('speed_ratio', 0) + seg2.get('speed_ratio', 0)) / 2,
-            'speed_limit_kmh': seg1.get('speed_limit_kmh'),
-            'speed_limit_margin_kmh': seg1.get('speed_limit_margin_kmh'),
-            'target_speed_kmh': seg1.get('target_speed_kmh', 0),
-            
+            "speed_kmh": (seg1.get("speed_kmh", 0) + seg2.get("speed_kmh", 0)) / 2,
+            "physics_limit_kmh": (
+                seg1.get("physics_limit_kmh", 100) + seg2.get("physics_limit_kmh", 100)
+            )
+            / 2,
+            "speed_ratio": (seg1.get("speed_ratio", 0) + seg2.get("speed_ratio", 0))
+            / 2,
+            "speed_limit_kmh": seg1.get("speed_limit_kmh"),
+            "speed_limit_margin_kmh": seg1.get("speed_limit_margin_kmh"),
+            "target_speed_kmh": seg1.get("target_speed_kmh", 0),
             # Dynamics
-            'lateral_g': (seg1.get('lateral_g', 0) + seg2.get('lateral_g', 0)) / 2,
-            'longitudinal_g': (seg1.get('longitudinal_g', 0) + seg2.get('longitudinal_g', 0)) / 2,
-            'total_g': (seg1.get('total_g', 0) + seg2.get('total_g', 0)) / 2,
-            'lateral_accel_mps2': seg1.get('lateral_accel_mps2', 0),
-            'longitudinal_accel_mps2': seg1.get('longitudinal_accel_mps2', 0),
-            'longitudinal_jerk_mps3': seg1.get('longitudinal_jerk_mps3', 0),
-            'lateral_jerk_mps3': seg1.get('lateral_jerk_mps3', 0),
-            'jerk_magnitude_mps3': seg1.get('jerk_magnitude_mps3', 0),
-            
+            "lateral_g": (seg1.get("lateral_g", 0) + seg2.get("lateral_g", 0)) / 2,
+            "longitudinal_g": (
+                seg1.get("longitudinal_g", 0) + seg2.get("longitudinal_g", 0)
+            )
+            / 2,
+            "total_g": (seg1.get("total_g", 0) + seg2.get("total_g", 0)) / 2,
+            "lateral_accel_mps2": seg1.get("lateral_accel_mps2", 0),
+            "longitudinal_accel_mps2": seg1.get("longitudinal_accel_mps2", 0),
+            "longitudinal_jerk_mps3": seg1.get("longitudinal_jerk_mps3", 0),
+            "lateral_jerk_mps3": seg1.get("lateral_jerk_mps3", 0),
+            "jerk_magnitude_mps3": seg1.get("jerk_magnitude_mps3", 0),
             # Friction
-            'friction_usage': (seg1.get('friction_usage', 0) + seg2.get('friction_usage', 0)) / 2,
-            'friction_mu': seg1.get('friction_mu', 0.9),
-            
+            "friction_usage": (
+                seg1.get("friction_usage", 0) + seg2.get("friction_usage", 0)
+            )
+            / 2,
+            "friction_mu": seg1.get("friction_mu", 0.9),
             # Geometry
-            'curvature_1pm': seg1.get('curvature_1pm', 0),
-            'curvature_radius_m': seg1.get('curvature_radius_m', seg1.get('curve_radius_m', float('inf'))),
-            'dcurvature_ds': seg1.get('dcurvature_ds', 0),
-            'grade_percent': seg1.get('grade_percent', 0),
-            'turn_type': seg1.get('turn_type', 'straight'),
-            'turn_angle_deg': seg1.get('turn_angle_deg', 0),
-            
+            "curvature_1pm": seg1.get("curvature_1pm", 0),
+            "curvature_radius_m": seg1.get(
+                "curvature_radius_m", seg1.get("curve_radius_m", float("inf"))
+            ),
+            "dcurvature_ds": seg1.get("dcurvature_ds", 0),
+            "grade_percent": seg1.get("grade_percent", 0),
+            "turn_type": seg1.get("turn_type", "straight"),
+            "turn_angle_deg": seg1.get("turn_angle_deg", 0),
             # Semantics
-            'surface_type': seg1.get('surface_type', 'asphalt'),
-            'road_type': seg1.get('road_type'),
-            'lane_count': seg1.get('lane_count'),
-            'is_intersection': seg1.get('is_intersection', False),
-            'distance_to_intersection_m': seg1.get('distance_to_intersection_m'),
-            
+            "surface_type": seg1.get("surface_type", "asphalt"),
+            "road_type": seg1.get("road_type"),
+            "lane_count": seg1.get("lane_count"),
+            "is_intersection": seg1.get("is_intersection", False),
+            "distance_to_intersection_m": seg1.get("distance_to_intersection_m"),
             # Energy
-            'energy_kwh_per_km': (seg1.get('energy_kwh_per_km', 0) + seg2.get('energy_kwh_per_km', 0)) / 2,
-            'energy_per_meter_j': seg1.get('energy_per_meter_j', 0),
-            'regen_potential_j': seg1.get('regen_potential_j', 0),
-            'coasting_opportunity': seg1.get('coasting_opportunity', False),
-            
+            "energy_kwh_per_km": (
+                seg1.get("energy_kwh_per_km", 0) + seg2.get("energy_kwh_per_km", 0)
+            )
+            / 2,
+            "energy_per_meter_j": seg1.get("energy_per_meter_j", 0),
+            "regen_potential_j": seg1.get("regen_potential_j", 0),
+            "coasting_opportunity": seg1.get("coasting_opportunity", False),
             # Comfort
-            'comfort_score': seg1.get('comfort_score', 0),
-            'is_uncomfortable': seg1.get('is_uncomfortable', False),
-            
+            "comfort_score": seg1.get("comfort_score", 0),
+            "is_uncomfortable": seg1.get("is_uncomfortable", False),
             # Action
-            'recommended_action': seg1.get('recommended_action', 'HOLD'),
-            'action_confidence': seg1.get('action_confidence', 1.0),
-            'action_reason': seg1.get('action_reason', ''),
-            'time_to_next_brake_s': seg1.get('time_to_next_brake_s'),
+            "recommended_action": seg1.get("recommended_action", "HOLD"),
+            "action_confidence": seg1.get("action_confidence", 1.0),
+            "action_reason": seg1.get("action_reason", ""),
+            "time_to_next_brake_s": seg1.get("time_to_next_brake_s"),
         }
-        
+
+        # Derive a per-segment safety margin if not explicitly provided.
+        # High friction usage → low safety margin; low usage → high margin.
+        if "safety_margin" not in avg_seg:
+            fu = avg_seg.get("friction_usage", 0.0)
+            # Clamp to [0, 1] and invert.
+            fu = max(0.0, min(1.0, float(fu)))
+            avg_seg["safety_margin"] = 1.0 - fu
+
         color = _get_color_for_segment(avg_seg, mode, stats)
-        
+
         # Keep paths flat on the ground (elevation = 0) for accurate overlay
         # Use color intensity to show G-force instead of 3D extrusion
         elevation = 0
-        
+
         # Format radius for display
-        radius = avg_seg['curvature_radius_m']
-        radius_display = f"{radius:.0f}" if isinstance(radius, (int, float)) and radius < 10000 else '∞'
-        
+        radius = avg_seg["curvature_radius_m"]
+        radius_display = (
+            f"{radius:.0f}"
+            if isinstance(radius, (int, float)) and radius < 10000
+            else "∞"
+        )
+
         path_segment = {
-            'path': [[lon1, lat1, elevation], [lon2, lat2, elevation]],
-            'color': color,
-            'width': path_width_m,
-            'elevation': elevation,
-            
+            "path": [[lon1, lat1, elevation], [lon2, lat2, elevation]],
+            "color": color,
+            "width": path_width_m,
+            "elevation": elevation,
             # Speed
-            'speed_kmh': round(avg_seg['speed_kmh'], 1),
-            'physics_limit_kmh': round(avg_seg['physics_limit_kmh'], 1),
-            'speed_ratio': round(avg_seg['speed_ratio'] * 100, 0),
-            'speed_limit_kmh': avg_seg.get('speed_limit_kmh') or 'N/A',
-            'speed_margin_kmh': f"{avg_seg['speed_limit_margin_kmh']:.1f}" if avg_seg.get('speed_limit_margin_kmh') else 'N/A',
-            'target_speed_kmh': round(avg_seg.get('target_speed_kmh', 0), 1),
-            
+            "speed_kmh": round(avg_seg["speed_kmh"], 1),
+            "physics_limit_kmh": round(avg_seg["physics_limit_kmh"], 1),
+            "speed_ratio": round(avg_seg["speed_ratio"] * 100, 0),
+            "speed_limit_kmh": avg_seg.get("speed_limit_kmh") or "N/A",
+            "speed_margin_kmh": f"{avg_seg['speed_limit_margin_kmh']:.1f}"
+            if avg_seg.get("speed_limit_margin_kmh")
+            else "N/A",
+            "target_speed_kmh": round(avg_seg.get("target_speed_kmh", 0), 1),
             # Dynamics
-            'lateral_g': round(avg_seg['lateral_g'], 3),
-            'longitudinal_g': round(avg_seg['longitudinal_g'], 3),
-            'total_g': round(avg_seg['total_g'], 3),
-            'lateral_accel_mps2': round(avg_seg.get('lateral_accel_mps2', 0), 2),
-            'longitudinal_accel_mps2': round(avg_seg.get('longitudinal_accel_mps2', 0), 2),
-            'longitudinal_jerk_mps3': round(avg_seg.get('longitudinal_jerk_mps3', 0), 2),
-            'lateral_jerk_mps3': round(avg_seg.get('lateral_jerk_mps3', 0), 2),
-            'jerk_mps3': round(avg_seg.get('jerk_magnitude_mps3', 0), 2),
-            
+            "lateral_g": round(avg_seg["lateral_g"], 3),
+            "longitudinal_g": round(avg_seg["longitudinal_g"], 3),
+            "total_g": round(avg_seg["total_g"], 3),
+            "lateral_accel_mps2": round(avg_seg.get("lateral_accel_mps2", 0), 2),
+            "longitudinal_accel_mps2": round(
+                avg_seg.get("longitudinal_accel_mps2", 0), 2
+            ),
+            "longitudinal_jerk_mps3": round(
+                avg_seg.get("longitudinal_jerk_mps3", 0), 2
+            ),
+            "lateral_jerk_mps3": round(avg_seg.get("lateral_jerk_mps3", 0), 2),
+            "jerk_mps3": round(avg_seg.get("jerk_magnitude_mps3", 0), 2),
             # Friction
-            'friction_usage': round(avg_seg['friction_usage'] * 100, 0),
-            'friction_mu': round(avg_seg['friction_mu'], 2),
-            
+            "friction_usage": round(avg_seg["friction_usage"] * 100, 0),
+            "friction_mu": round(avg_seg["friction_mu"], 2),
             # Geometry
-            'curvature_1pm': f"{avg_seg.get('curvature_1pm', 0):.4f}",
-            'curvature_radius_m': radius_display,
-            'dcurvature_ds': f"{avg_seg.get('dcurvature_ds', 0):.5f}",
-            'grade_percent': round(avg_seg['grade_percent'], 1),
-            'turn_type': avg_seg.get('turn_type', 'straight'),
-            'turn_angle_deg': round(avg_seg.get('turn_angle_deg', 0), 1),
-            
+            "curvature_1pm": f"{avg_seg.get('curvature_1pm', 0):.4f}",
+            "curvature_radius_m": radius_display,
+            "dcurvature_ds": f"{avg_seg.get('dcurvature_ds', 0):.5f}",
+            "grade_percent": round(avg_seg["grade_percent"], 1),
+            "turn_type": avg_seg.get("turn_type", "straight"),
+            "turn_angle_deg": round(avg_seg.get("turn_angle_deg", 0), 1),
             # Semantics
-            'surface_type': avg_seg['surface_type'],
-            'road_type': avg_seg.get('road_type') or 'unknown',
-            'lane_count': avg_seg.get('lane_count') or 'N/A',
-            'is_intersection': avg_seg.get('is_intersection', False),
-            'distance_to_intersection_m': f"{avg_seg['distance_to_intersection_m']:.0f}" if avg_seg.get('distance_to_intersection_m') else 'N/A',
-            
+            "surface_type": avg_seg["surface_type"],
+            "road_type": avg_seg.get("road_type") or "unknown",
+            "lane_count": avg_seg.get("lane_count") or "N/A",
+            "is_intersection": avg_seg.get("is_intersection", False),
+            "distance_to_intersection_m": f"{avg_seg['distance_to_intersection_m']:.0f}"
+            if avg_seg.get("distance_to_intersection_m")
+            else "N/A",
             # Energy
-            'energy_kwh_per_km': round(avg_seg['energy_kwh_per_km'] * 1000, 0),  # Wh/km for readability
-            'energy_per_meter_j': round(avg_seg.get('energy_per_meter_j', 0), 1),
-            'regen_potential_j': round(avg_seg.get('regen_potential_j', 0), 0),
-            'coasting_opportunity': '✓' if avg_seg.get('coasting_opportunity') else '',
-            
+            "energy_kwh_per_km": round(
+                avg_seg["energy_kwh_per_km"] * 1000, 0
+            ),  # Wh/km for readability
+            "energy_per_meter_j": round(avg_seg.get("energy_per_meter_j", 0), 1),
+            "regen_potential_j": round(avg_seg.get("regen_potential_j", 0), 0),
+            "coasting_opportunity": "✓" if avg_seg.get("coasting_opportunity") else "",
             # Comfort
-            'comfort_score': round(avg_seg.get('comfort_score', 0), 2),
-            'is_uncomfortable': '⚠️' if avg_seg.get('is_uncomfortable') else '✓',
-            
+            "comfort_score": round(avg_seg.get("comfort_score", 0), 2),
+            "is_uncomfortable": "⚠️" if avg_seg.get("is_uncomfortable") else "✓",
             # Action
-            'recommended_action': avg_seg['recommended_action'],
-            'action_confidence': round(avg_seg.get('action_confidence', 1.0), 2),
-            'action_reason': avg_seg['action_reason'],
-            'time_to_brake_s': f"{avg_seg['time_to_next_brake_s']:.1f}" if avg_seg.get('time_to_next_brake_s') else 'N/A',
+            "recommended_action": avg_seg["recommended_action"],
+            "action_confidence": round(avg_seg.get("action_confidence", 1.0), 2),
+            "action_reason": avg_seg["action_reason"],
+            "time_to_brake_s": f"{avg_seg['time_to_next_brake_s']:.1f}"
+            if avg_seg.get("time_to_next_brake_s")
+            else "N/A",
         }
-        
+
         path_data.append(path_segment)
-    
+
     return path_data, stats
 
 
@@ -652,7 +711,7 @@ def _build_rich_tooltip() -> Dict:
         "style": {
             "backgroundColor": "transparent",
             "border": "none",
-        }
+        },
     }
 
 
@@ -660,68 +719,72 @@ def _build_hud_html(
     title: str,
     mode: str,
     stats: Dict,
-    analysis: Optional['ProfileAnalysis'] = None,
+    analysis: Optional["ProfileAnalysis"] = None,
     style: str = "osm",
 ) -> str:
     """Build the HUD overlay HTML."""
-    
+
     mode_labels = {
-        'speed': ('Speed (km/h)', '#ef4444', '#22c55e'),  # Red=slow, Green=fast
-        'energy': ('Energy (Wh/km)', '#22c55e', '#ef4444'),  # Green=efficient, Red=high
-        'gforce': ('Lateral G-Force', '#3b82f6', '#ef4444'),
-        'lateral_g': ('Lateral G-Force', '#3b82f6', '#ef4444'),
-        'longitudinal_g': ('Longitudinal G', '#22c55e', '#ef4444'),
-        'friction': ('Friction Usage (%)', '#22c55e', '#ef4444'),
-        'comfort': ('Comfort Score', '#22c55e', '#ef4444'),  # Green=comfortable
-        'difficulty': ('Difficulty', '#3b82f6', '#ef4444'),  # Blue=easy, Red=hard
-        'safety_margin': ('Safety Margin', '#ef4444', '#22c55e'),  # Red=danger, Green=safe
-        'regen': ('Regen Potential', '#888', '#22c55e'),
-        'action': ('Recommended Action', '#22c55e', '#ef4444'),
+        "speed": ("Speed (km/h)", "#ef4444", "#22c55e"),  # Red=slow, Green=fast
+        "energy": ("Energy (Wh/km)", "#22c55e", "#ef4444"),  # Green=efficient, Red=high
+        "gforce": ("Lateral G-Force", "#3b82f6", "#ef4444"),
+        "lateral_g": ("Lateral G-Force", "#3b82f6", "#ef4444"),
+        "longitudinal_g": ("Longitudinal G", "#22c55e", "#ef4444"),
+        "friction": ("Friction Usage (%)", "#22c55e", "#ef4444"),
+        "comfort": ("Comfort Score", "#22c55e", "#ef4444"),  # Green=comfortable
+        "difficulty": ("Difficulty", "#3b82f6", "#ef4444"),  # Blue=easy, Red=hard
+        "safety_margin": (
+            "Safety Margin",
+            "#ef4444",
+            "#22c55e",
+        ),  # Red=danger, Green=safe
+        "regen": ("Regen Potential", "#888", "#22c55e"),
+        "action": ("Recommended Action", "#22c55e", "#ef4444"),
     }
-    
-    mode_info = mode_labels.get(mode, mode_labels['speed'])
-    
+
+    mode_info = mode_labels.get(mode, mode_labels["speed"])
+
     if analysis:
         summary = analysis.get_summary_dict()
-        distance_km = summary.get('total_distance_km', 0)
-        time_s = summary.get('lap_time_s', 0)
-        time_min = summary.get('lap_time_min', 0)
-        energy_kwh = summary.get('total_energy_kwh', 0)
-        total_regen_kwh = summary.get('total_regen_kwh', 0)
-        avg_speed = summary.get('avg_speed_kmh', 0)
-        max_speed = summary.get('max_speed_kmh', 0)
-        max_lat_g = summary.get('max_lateral_g', 0)
-        p95_lat_g = summary.get('p95_lateral_g', 0)
-        avg_lat_g = summary.get('avg_lateral_g', 0)
-        max_friction = summary.get('max_friction_usage', 0) * 100
-        avg_friction = summary.get('avg_friction_usage', 0) * 100
-        p95_jerk = summary.get('p95_longitudinal_jerk', 0)
-        pct_brake = summary.get('brake_fraction', 0) * 100
-        pct_coast = summary.get('coast_fraction', 0) * 100
-        pct_accel = summary.get('accelerate_fraction', 0) * 100
-        pct_uncomfortable = summary.get('pct_uncomfortable', 0)
-        comfort_violations = summary.get('comfort_violations_per_km', 0)
-        efficiency = summary.get('energy_kwh_per_km', 0)
-        regen_fraction = summary.get('regen_fraction', 0)
-        turns_per_km = summary.get('turns_per_km', 0)
-        difficulty = summary.get('difficulty_score', 0)
-        safety_margin = summary.get('safety_margin_score', 0)
-        max_grade = summary.get('max_grade_percent', 0)
-        avg_speed_limit = summary.get('avg_speed_limit_kmh', 0)
-        p95_speed_limit = summary.get('p95_speed_limit_kmh', 0)
-        avg_over_limit = summary.get('avg_speed_over_limit_kmh', 0)
-        pct_distance_over_limit = summary.get('pct_distance_over_limit', 0)
+        distance_km = summary.get("total_distance_km", 0)
+        time_s = summary.get("lap_time_s", 0)
+        time_min = summary.get("lap_time_min", 0)
+        energy_kwh = summary.get("total_energy_kwh", 0)
+        total_regen_kwh = summary.get("total_regen_kwh", 0)
+        avg_speed = summary.get("avg_speed_kmh", 0)
+        max_speed = summary.get("max_speed_kmh", 0)
+        max_lat_g = summary.get("max_lateral_g", 0)
+        p95_lat_g = summary.get("p95_lateral_g", 0)
+        avg_lat_g = summary.get("avg_lateral_g", 0)
+        max_friction = summary.get("max_friction_usage", 0) * 100
+        avg_friction = summary.get("avg_friction_usage", 0) * 100
+        p95_jerk = summary.get("p95_longitudinal_jerk", 0)
+        pct_brake = summary.get("brake_fraction", 0) * 100
+        pct_coast = summary.get("coast_fraction", 0) * 100
+        pct_accel = summary.get("accelerate_fraction", 0) * 100
+        pct_uncomfortable = summary.get("pct_uncomfortable", 0)
+        comfort_violations = summary.get("comfort_violations_per_km", 0)
+        efficiency = summary.get("energy_kwh_per_km", 0)
+        regen_fraction = summary.get("regen_fraction", 0)
+        turns_per_km = summary.get("turns_per_km", 0)
+        difficulty = summary.get("difficulty_score", 0)
+        safety_margin = summary.get("safety_margin_score", 0)
+        max_grade = summary.get("max_grade_percent", 0)
+        avg_speed_limit = summary.get("avg_speed_limit_kmh", 0)
+        p95_speed_limit = summary.get("p95_speed_limit_kmh", 0)
+        avg_over_limit = summary.get("avg_speed_over_limit_kmh", 0)
+        pct_distance_over_limit = summary.get("pct_distance_over_limit", 0)
     else:
-        distance_km = stats.get('total_distance_km', 0)
+        distance_km = stats.get("total_distance_km", 0)
         time_s = 0
         time_min = 0
         energy_kwh = 0
-        avg_speed = stats.get('avg_speed', 0)
-        max_speed = stats.get('max_speed', 0)
-        max_lat_g = stats.get('max_lateral_g', 0)
+        avg_speed = stats.get("avg_speed", 0)
+        max_speed = stats.get("max_speed", 0)
+        max_lat_g = stats.get("max_lateral_g", 0)
         p95_lat_g = max_lat_g * 0.85
-        avg_lat_g = stats.get('avg_lateral_g', 0)
-        max_friction = stats.get('max_friction_usage', 0) * 100
+        avg_lat_g = stats.get("avg_lateral_g", 0)
+        max_friction = stats.get("max_friction_usage", 0) * 100
         avg_friction = max_friction * 0.6
         p95_jerk = 0
         pct_brake = 0
@@ -735,16 +798,16 @@ def _build_hud_html(
         difficulty = 0
         safety_margin = 0
         max_grade = 0
-    
+
     # Map style indicator
     style_label = style.upper()
-    if style in ['satellite', 'satellite-plain']:
+    if style in ["satellite", "satellite-plain"]:
         style_badge = "🛰️ Satellite"
-    elif style == 'dark':
+    elif style == "dark":
         style_badge = "🌙 Dark"
     else:
         style_badge = "🗺️ OSM"
-    
+
     return f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -922,45 +985,45 @@ def make_deck(
 ) -> Any:
     """
     Create a pydeck Deck with the appropriate basemap.
-    
+
     Args:
         view_state: pydeck ViewState
         data_layers: List of data layers (PathLayer, etc.)
         style: Map style - "osm", "dark", "satellite", etc.
         tooltip: Tooltip configuration
-    
+
     Returns:
         pydeck.Deck object
     """
     _check_pydeck()
-    
+
     map_style, tile_layer, mapbox_token = _get_basemap_layer(style)
-    
+
     # Build layers list
     layers = []
     if tile_layer:
         layers.append(tile_layer)
     layers.extend(data_layers)
-    
+
     # Build deck configuration
     deck_kwargs = {
-        'layers': layers,
-        'initial_view_state': view_state,
-        'tooltip': tooltip,
+        "layers": layers,
+        "initial_view_state": view_state,
+        "tooltip": tooltip,
     }
-    
+
     if map_style and mapbox_token:
         # Use Mapbox provider for Mapbox styles
-        deck_kwargs['map_style'] = map_style
-        deck_kwargs['map_provider'] = 'mapbox'
-        deck_kwargs['api_keys'] = {'mapbox': mapbox_token}
+        deck_kwargs["map_style"] = map_style
+        deck_kwargs["map_provider"] = "mapbox"
+        deck_kwargs["api_keys"] = {"mapbox": mapbox_token}
     elif tile_layer:
         # Using TileLayer for basemap, no map_style needed
-        deck_kwargs['map_style'] = None
-        deck_kwargs['map_provider'] = None
+        deck_kwargs["map_style"] = None
+        deck_kwargs["map_provider"] = None
     else:
-        deck_kwargs['map_style'] = None
-    
+        deck_kwargs["map_style"] = None
+
     return pdk.Deck(**deck_kwargs)
 
 
@@ -979,7 +1042,7 @@ def visualize_profile(
 ) -> Any:
     """
     Render an interactive 3D velocity profile visualization.
-    
+
     Args:
         path_points: List of dicts with lat, lon, speed_mps, curvature, etc.
         color_by: Feature to color paths by. Options:
@@ -1001,7 +1064,7 @@ def visualize_profile(
         friction_multiplier: Additional friction scaling
         lateral_g_scale: Scale factor for G-force elevation
         path_width_m: Width of path tubes in meters
-    
+
     Returns:
         pydeck.Deck object
     """
@@ -1009,40 +1072,38 @@ def visualize_profile(
     if mode is not None:
         color_by = mode
     _check_pydeck()
-    
+
     # Analyze the profile
     if _HAS_ANALYSIS:
         analysis = analyze_profile(
-            path_points, 
-            condition=condition, 
-            friction_multiplier=friction_multiplier
+            path_points, condition=condition, friction_multiplier=friction_multiplier
         )
         segments = [seg.to_dict() for seg in analysis.segments]
     else:
         analysis = None
         segments = path_points
-    
+
     # Build path data
     path_data, stats = _build_path_data(
-        segments, 
-        mode=color_by, 
+        segments,
+        mode=color_by,
         lateral_g_scale=lateral_g_scale,
-        path_width_m=path_width_m
+        path_width_m=path_width_m,
     )
-    
+
     if not path_data:
         raise ValueError("No valid path data to visualize")
-    
+
     # Extract coordinates
-    lats = [s.get('lat', 0) for s in segments if abs(s.get('lat', 0)) > 0.001]
-    lons = [s.get('lon', 0) for s in segments if abs(s.get('lon', 0)) > 0.001]
-    
+    lats = [s.get("lat", 0) for s in segments if abs(s.get("lat", 0)) > 0.001]
+    lons = [s.get("lon", 0) for s in segments if abs(s.get("lon", 0)) > 0.001]
+
     if not lats or not lons:
         raise ValueError("No valid coordinates in path points. Ensure lat/lon are set.")
-    
+
     if analysis:
-        stats['total_distance_km'] = analysis.total_distance_km
-    
+        stats["total_distance_km"] = analysis.total_distance_km
+
     # Create path layer
     path_layer = pdk.Layer(
         "PathLayer",
@@ -1059,29 +1120,29 @@ def visualize_profile(
         auto_highlight=True,
         highlight_color=[255, 255, 255, 80],
     )
-    
+
     # View state
     view_state = _compute_view_state(lats, lons, pitch=45, bearing=15)
-    
+
     # Tooltip
     tooltip = _build_rich_tooltip()
-    
+
     # Create deck with appropriate basemap
     deck = make_deck(view_state, [path_layer], style=style, tooltip=tooltip)
-    
+
     # Build HUD
     display_title = title or "ApexVelocity Analysis"
     hud_html = _build_hud_html(display_title, color_by, stats, analysis, style)
-    
+
     # Save to HTML
     if output_html:
         html_content = deck.to_html(as_string=True)
-        html_content = html_content.replace('<body>', f'<body>{hud_html}')
-        
-        with open(output_html, 'w') as f:
+        html_content = html_content.replace("<body>", f"<body>{hud_html}")
+
+        with open(output_html, "w") as f:
             f.write(html_content)
         print(f"✓ Saved visualization: {output_html}")
-    
+
     return deck
 
 
@@ -1100,7 +1161,7 @@ def visualize_comparison(
 ) -> Any:
     """
     Render two profiles on the same map for comparison.
-    
+
     Args:
         path_points_a: First set of path points
         path_points_b: Second set of path points
@@ -1109,43 +1170,51 @@ def visualize_comparison(
         title: Optional title
         output_html: If set, save to this HTML file
         style: Map style - "osm" (default), "dark", "satellite"
-    
+
     Returns:
         pydeck.Deck object
     """
     _check_pydeck()
-    
+
     # Analyze both profiles
     if _HAS_ANALYSIS:
-        analysis_a = analyze_profile(path_points_a, condition=condition_a, friction_multiplier=friction_a)
-        analysis_b = analyze_profile(path_points_b, condition=condition_b, friction_multiplier=friction_b)
+        analysis_a = analyze_profile(
+            path_points_a, condition=condition_a, friction_multiplier=friction_a
+        )
+        analysis_b = analyze_profile(
+            path_points_b, condition=condition_b, friction_multiplier=friction_b
+        )
         segments_a = [seg.to_dict() for seg in analysis_a.segments]
         segments_b = [seg.to_dict() for seg in analysis_b.segments]
     else:
         analysis_a = analysis_b = None
         segments_a = path_points_a
         segments_b = path_points_b
-    
+
     # Build path data
-    path_data_a, stats_a = _build_path_data(segments_a, mode="speed", lateral_g_scale=25)
-    path_data_b, stats_b = _build_path_data(segments_b, mode="speed", lateral_g_scale=25)
-    
+    path_data_a, stats_a = _build_path_data(
+        segments_a, mode="speed", lateral_g_scale=25
+    )
+    path_data_b, stats_b = _build_path_data(
+        segments_b, mode="speed", lateral_g_scale=25
+    )
+
     # Color paths distinctly
     for seg in path_data_a:
-        seg['color'] = [66, 165, 245, 220]
-        for pt in seg['path']:
+        seg["color"] = [66, 165, 245, 220]
+        for pt in seg["path"]:
             pt[2] += 5
-    
+
     for seg in path_data_b:
-        seg['color'] = [255, 152, 0, 220]
-        for pt in seg['path']:
+        seg["color"] = [255, 152, 0, 220]
+        for pt in seg["path"]:
             pt[2] += 35
-    
+
     all_data = path_data_a + path_data_b
-    
-    lats = [s.get('lat', 0) for s in segments_a if abs(s.get('lat', 0)) > 0.001]
-    lons = [s.get('lon', 0) for s in segments_a if abs(s.get('lon', 0)) > 0.001]
-    
+
+    lats = [s.get("lat", 0) for s in segments_a if abs(s.get("lat", 0)) > 0.001]
+    lons = [s.get("lon", 0) for s in segments_a if abs(s.get("lon", 0)) > 0.001]
+
     path_layer = pdk.Layer(
         "PathLayer",
         data=all_data,
@@ -1158,11 +1227,13 @@ def visualize_comparison(
         billboard=True,
         pickable=True,
     )
-    
+
     view_state = _compute_view_state(lats, lons, pitch=45, bearing=15)
-    
-    deck = make_deck(view_state, [path_layer], style=style, tooltip=_build_rich_tooltip())
-    
+
+    deck = make_deck(
+        view_state, [path_layer], style=style, tooltip=_build_rich_tooltip()
+    )
+
     # Comparison stats
     if analysis_a and analysis_b:
         time_a = analysis_a.total_time_s
@@ -1177,22 +1248,22 @@ def visualize_comparison(
         time_a = time_b = 0
         energy_a = energy_b = 0
         max_g_a = max_g_b = 0
-        avg_speed_a = stats_a.get('avg_speed', 0)
-        avg_speed_b = stats_b.get('avg_speed', 0)
-    
+        avg_speed_a = stats_a.get("avg_speed", 0)
+        avg_speed_b = stats_b.get("avg_speed", 0)
+
     time_delta = time_b - time_a
     time_pct = (time_delta / time_a * 100) if time_a > 0 else 0
-    
+
     display_title = title or f"{label_a} vs {label_b}"
-    
+
     # Style badge
-    if style in ['satellite', 'satellite-plain']:
+    if style in ["satellite", "satellite-plain"]:
         style_badge = "🛰️ Satellite"
-    elif style == 'dark':
+    elif style == "dark":
         style_badge = "🌙 Dark"
     else:
         style_badge = "🗺️ OSM"
-    
+
     comparison_hud = f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -1286,15 +1357,15 @@ def visualize_comparison(
         </div>
     </div>
     """
-    
+
     if output_html:
         html_content = deck.to_html(as_string=True)
-        html_content = html_content.replace('<body>', f'<body>{comparison_hud}')
-        
-        with open(output_html, 'w') as f:
+        html_content = html_content.replace("<body>", f"<body>{comparison_hud}")
+
+        with open(output_html, "w") as f:
             f.write(html_content)
         print(f"✓ Saved comparison: {output_html}")
-    
+
     return deck
 
 
@@ -1311,12 +1382,12 @@ def visualize_profile_interactive(
 ) -> None:
     """
     Generate an interactive HTML visualization with metric switching dropdown.
-    
+
     This creates a standalone HTML file that:
     1. Properly renders Mapbox satellite/street tiles
     2. Has an interactive dropdown to switch between color metrics
     3. Shows a dynamic legend that updates with the selected metric
-    
+
     Args:
         path_points: List of dicts with lat, lon, speed_mps, curvature, etc.
         title: Title for the visualization
@@ -1329,19 +1400,19 @@ def visualize_profile_interactive(
         path_width_m: Width of path in meters
     """
     import json
-    
+
     # Get Mapbox token
     token = mapbox_token or _get_mapbox_token()
     if not token:
-        print("⚠️  No Mapbox token found. Set MAPBOX_API_KEY or pass mapbox_token parameter.")
+        print(
+            "⚠️  No Mapbox token found. Set MAPBOX_API_KEY or pass mapbox_token parameter."
+        )
         print("   Falling back to OpenStreetMap tiles (no satellite).")
-    
+
     # Analyze the profile
     if _HAS_ANALYSIS:
         analysis = analyze_profile(
-            path_points, 
-            condition=condition, 
-            friction_multiplier=friction_multiplier
+            path_points, condition=condition, friction_multiplier=friction_multiplier
         )
         segments = [seg.to_dict() for seg in analysis.segments]
         summary = analysis.get_summary_dict()
@@ -1349,40 +1420,42 @@ def visualize_profile_interactive(
         analysis = None
         segments = path_points
         summary = {}
-    
+
     # Build path data for ALL color modes
     all_modes = [
-        'speed',
-        'energy',
-        'lateral_g',
-        'friction',
-        'comfort',
-        'difficulty',
-        'safety_margin',
-        'regen',
-        'action',
+        "speed",
+        "energy",
+        "lateral_g",
+        "friction",
+        "comfort",
+        "difficulty",
+        "safety_margin",
+        "regen",
+        "action",
     ]
     mode_data = {}
-    
+
     for mode in all_modes:
-        path_data, stats = _build_path_data(segments, mode=mode, path_width_m=path_width_m)
+        path_data, stats = _build_path_data(
+            segments, mode=mode, path_width_m=path_width_m
+        )
         mode_data[mode] = path_data
-    
+
     # Extract coordinates for view
-    lats = [s.get('lat', 0) for s in segments if abs(s.get('lat', 0)) > 0.001]
-    lons = [s.get('lon', 0) for s in segments if abs(s.get('lon', 0)) > 0.001]
-    
+    lats = [s.get("lat", 0) for s in segments if abs(s.get("lat", 0)) > 0.001]
+    lons = [s.get("lon", 0) for s in segments if abs(s.get("lon", 0)) > 0.001]
+
     if not lats or not lons:
         raise ValueError("No valid coordinates in path points")
-    
+
     center_lat = sum(lats) / len(lats)
     center_lon = sum(lons) / len(lons)
-    
+
     # Calculate zoom
     lat_range = max(lats) - min(lats)
     lon_range = max(lons) - min(lons)
     max_range = max(lat_range, lon_range)
-    
+
     if max_range > 0.2:
         zoom = 10
     elif max_range > 0.05:
@@ -1391,61 +1464,61 @@ def visualize_profile_interactive(
         zoom = 14
     else:
         zoom = 16
-    
+
     # Compute additional stats from segments
     max_grade = 0
-    
+
     for seg in segments:
-        grade = abs(seg.get('grade_percent', 0))
+        grade = abs(seg.get("grade_percent", 0))
         if grade > max_grade:
             max_grade = grade
-    
+
     # Build summary stats for HUD
     hud_stats = {
-        'distance_km': summary.get('total_distance_km', 0),
-        'time_min': summary.get('lap_time_min', 0),
-        'avg_speed': summary.get('avg_speed_kmh', 0),
-        'max_speed': summary.get('max_speed_kmh', 0),
-        'energy_kwh': summary.get('total_energy_kwh', 0),
-        'max_lat_g': summary.get('max_lateral_g', 0),
-        'p95_lat_g': summary.get('p95_lateral_g', 0),
-        'max_friction': summary.get('max_friction_usage', 0) * 100,
-        'avg_friction': summary.get('avg_friction_usage', 0) * 100,
-        'difficulty': summary.get('difficulty_score', 0),
-        'safety_margin': summary.get('safety_margin_score', 0),
-        'pct_brake': summary.get('brake_fraction', 0) * 100,
-        'pct_coast': summary.get('coast_fraction', 0) * 100,
-        'pct_accel': summary.get('accelerate_fraction', 0) * 100,
-        'max_grade': max_grade,
+        "distance_km": summary.get("total_distance_km", 0),
+        "time_min": summary.get("lap_time_min", 0),
+        "avg_speed": summary.get("avg_speed_kmh", 0),
+        "max_speed": summary.get("max_speed_kmh", 0),
+        "energy_kwh": summary.get("total_energy_kwh", 0),
+        "max_lat_g": summary.get("max_lateral_g", 0),
+        "p95_lat_g": summary.get("p95_lateral_g", 0),
+        "max_friction": summary.get("max_friction_usage", 0) * 100,
+        "avg_friction": summary.get("avg_friction_usage", 0) * 100,
+        "difficulty": summary.get("difficulty_score", 0),
+        "safety_margin": summary.get("safety_margin_score", 0),
+        "pct_brake": summary.get("brake_fraction", 0) * 100,
+        "pct_coast": summary.get("coast_fraction", 0) * 100,
+        "pct_accel": summary.get("accelerate_fraction", 0) * 100,
+        "max_grade": max_grade,
         # Use analysis-level regen estimate so we always reflect the
         # physics-based regeneration model, even if core energy_joules
         # is strictly positive.
-        'regen_kwh': summary.get('total_regen_kwh', 0),
-        'regen_fraction': summary.get('regen_fraction', 0),
+        "regen_kwh": summary.get("total_regen_kwh", 0),
+        "regen_fraction": summary.get("regen_fraction", 0),
         # Speed-limit stats for UI (avg and p95).
-        'avg_speed_limit_kmh': summary.get('avg_speed_limit_kmh', 0),
-        'p95_speed_limit_kmh': summary.get('p95_speed_limit_kmh', 0),
+        "avg_speed_limit_kmh": summary.get("avg_speed_limit_kmh", 0),
+        "p95_speed_limit_kmh": summary.get("p95_speed_limit_kmh", 0),
     }
     # Add elevation metadata so the UI can indicate uphill/downhill.
     if path_points:
-        start_elev = path_points[0].get('z_m')
+        start_elev = path_points[0].get("z_m")
         if start_elev is None:
-            start_elev = path_points[0].get('elevation_m', 0.0)
-        end_elev = path_points[-1].get('z_m')
+            start_elev = path_points[0].get("elevation_m", 0.0)
+        end_elev = path_points[-1].get("z_m")
         if end_elev is None:
-            end_elev = path_points[-1].get('elevation_m', 0.0)
-        hud_stats['start_elev_m'] = float(start_elev)
-        hud_stats['end_elev_m'] = float(end_elev)
-        hud_stats['net_elev_m'] = float(end_elev) - float(start_elev)
+            end_elev = path_points[-1].get("elevation_m", 0.0)
+        hud_stats["start_elev_m"] = float(start_elev)
+        hud_stats["end_elev_m"] = float(end_elev)
+        hud_stats["net_elev_m"] = float(end_elev) - float(start_elev)
     else:
-        hud_stats['start_elev_m'] = 0.0
-        hud_stats['end_elev_m'] = 0.0
-        hud_stats['net_elev_m'] = 0.0
-    
+        hud_stats["start_elev_m"] = 0.0
+        hud_stats["end_elev_m"] = 0.0
+        hud_stats["net_elev_m"] = 0.0
+
     # Convert mode_data to JSON
     mode_data_json = json.dumps(mode_data)
     hud_stats_json = json.dumps(hud_stats)
-    
+
     # Determine map style URL
     if token:
         if style == "satellite" or style == "satellite-streets":
@@ -1460,12 +1533,12 @@ def visualize_profile_interactive(
     else:
         map_style_url = ""
         use_mapbox = False
-    
+
     # Generate the HTML
-    start_lat = path_points[0].get('lat', center_lat) if path_points else center_lat
-    start_lon = path_points[0].get('lon', center_lon) if path_points else center_lon
-    end_lat = path_points[-1].get('lat', center_lat) if path_points else center_lat
-    end_lon = path_points[-1].get('lon', center_lon) if path_points else center_lon
+    start_lat = path_points[0].get("lat", center_lat) if path_points else center_lat
+    start_lon = path_points[0].get("lon", center_lon) if path_points else center_lon
+    end_lat = path_points[-1].get("lat", center_lat) if path_points else center_lat
+    end_lon = path_points[-1].get("lon", center_lon) if path_points else center_lon
 
     html_content = _generate_interactive_html(
         title=title,
@@ -1484,10 +1557,10 @@ def visualize_profile_interactive(
         end_lat=end_lat,
         end_lon=end_lon,
     )
-    
-    with open(output_html, 'w') as f:
+
+    with open(output_html, "w") as f:
         f.write(html_content)
-    
+
     print(f"✓ Saved interactive visualization: {output_html}")
 
 
@@ -1509,9 +1582,9 @@ def _generate_interactive_html(
     end_lon: float,
 ) -> str:
     """Generate the complete interactive HTML with Mapbox GL JS + deck.gl overlay."""
-    
+
     # Use Mapbox GL JS as the basemap with deck.gl overlay for reliable satellite rendering
-    return f'''<!DOCTYPE html>
+    return f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -2383,4 +2456,4 @@ def _generate_interactive_html(
         window.onload = initMap;
     </script>
 </body>
-</html>'''
+</html>"""

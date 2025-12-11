@@ -27,7 +27,9 @@ from .analysis import analyze_profile, convert_segments_for_viz
 from .api import load_vehicle
 
 
-def _attach_solver_results(path_points: List[Dict], vehicle: str, condition: str) -> None:
+def _attach_solver_results(
+    path_points: List[Dict], vehicle: str, condition: str
+) -> None:
     """
     Run the core solver and attach speed/energy fields to path_points in-place.
 
@@ -50,7 +52,9 @@ def _attach_solver_results(path_points: List[Dict], vehicle: str, condition: str
         )
         surfaces.append(pt.get("surface_type", "asphalt"))
 
-    result = _solve(path=coords, surfaces=surfaces, vehicle=vehicle, condition=condition)
+    result = _solve(
+        path=coords, surfaces=surfaces, vehicle=vehicle, condition=condition
+    )
 
     vp = result.velocity_profile_mps or []
     ej = result.energy_joules or []
@@ -141,5 +145,3 @@ def export_routes_to_parquet(
         df = pd.DataFrame(rows)  # type: ignore
 
     df.to_parquet(output_path, index=False)  # type: ignore
-
-

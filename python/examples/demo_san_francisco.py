@@ -39,70 +39,72 @@ GRAVITY = 9.81
 # Coordinates verified against satellite imagery on 2024-01-15
 LOMBARD_CROOKED_SECTION = [
     # Starting at Hyde Street (bottom/east end) - elevation ~55m
-    {'lat': 37.802017, 'lon': -122.418625},  # Hyde St intersection
+    {"lat": 37.802017, "lon": -122.418625},  # Hyde St intersection
     # First straight segment going west
-    {'lat': 37.802035, 'lon': -122.418720},
+    {"lat": 37.802035, "lon": -122.418720},
     # Hairpin 1 - turning north
-    {'lat': 37.802115, 'lon': -122.418815},
-    {'lat': 37.802028, 'lon': -122.418895},
-    # Hairpin 2 - turning south  
-    {'lat': 37.802108, 'lon': -122.418980},
-    {'lat': 37.802025, 'lon': -122.419065},
+    {"lat": 37.802115, "lon": -122.418815},
+    {"lat": 37.802028, "lon": -122.418895},
+    # Hairpin 2 - turning south
+    {"lat": 37.802108, "lon": -122.418980},
+    {"lat": 37.802025, "lon": -122.419065},
     # Hairpin 3 - turning north
-    {'lat': 37.802105, 'lon': -122.419150},
-    {'lat': 37.802022, 'lon': -122.419235},
+    {"lat": 37.802105, "lon": -122.419150},
+    {"lat": 37.802022, "lon": -122.419235},
     # Hairpin 4 - turning south
-    {'lat': 37.802102, 'lon': -122.419320},
-    {'lat': 37.802019, 'lon': -122.419405},
+    {"lat": 37.802102, "lon": -122.419320},
+    {"lat": 37.802019, "lon": -122.419405},
     # Hairpin 5 - turning north
-    {'lat': 37.802099, 'lon': -122.419490},
-    {'lat': 37.802016, 'lon': -122.419575},
+    {"lat": 37.802099, "lon": -122.419490},
+    {"lat": 37.802016, "lon": -122.419575},
     # Hairpin 6 - turning south
-    {'lat': 37.802096, 'lon': -122.419660},
-    {'lat': 37.802013, 'lon': -122.419745},
+    {"lat": 37.802096, "lon": -122.419660},
+    {"lat": 37.802013, "lon": -122.419745},
     # Hairpin 7 - turning north
-    {'lat': 37.802093, 'lon': -122.419830},
-    {'lat': 37.802010, 'lon': -122.419915},
+    {"lat": 37.802093, "lon": -122.419830},
+    {"lat": 37.802010, "lon": -122.419915},
     # Hairpin 8 - final turn south
-    {'lat': 37.802090, 'lon': -122.420000},
+    {"lat": 37.802090, "lon": -122.420000},
     # Exit at Leavenworth Street (top/west end) - elevation ~80m
-    {'lat': 37.802050, 'lon': -122.420140},
+    {"lat": 37.802050, "lon": -122.420140},
 ]
 
 
 def create_raw_lombard_path() -> List[Dict]:
     """Create raw Lombard Street path (before smoothing)."""
-    
+
     path_points = []
     cumulative_distance = 0.0
-    
+
     for i, coord in enumerate(LOMBARD_CROOKED_SECTION):
-        lat, lon = coord['lat'], coord['lon']
-        
+        lat, lon = coord["lat"], coord["lon"]
+
         # Calculate distance from previous point
         if i > 0:
             prev = LOMBARD_CROOKED_SECTION[i - 1]
-            dlat = (lat - prev['lat']) * 111320
-            dlon = (lon - prev['lon']) * 111320 * math.cos(math.radians(lat))
-            segment_dist = math.sqrt(dlat*dlat + dlon*dlon)
+            dlat = (lat - prev["lat"]) * 111320
+            dlon = (lon - prev["lon"]) * 111320 * math.cos(math.radians(lat))
+            segment_dist = math.sqrt(dlat * dlat + dlon * dlon)
             cumulative_distance += segment_dist
-        
-        path_points.append({
-            'lat': lat,
-            'lon': lon,
-            'x_m': 0,
-            'y_m': 0,
-            'z_m': 0,
-            'elevation_m': 0,
-            'curvature': 0.0,
-            'distance_along_m': cumulative_distance,
-            'surface_type': 'asphalt',
-            'speed_mps': 10.0,
-            'v_profile': 10.0,
-            'energy_joules': 0.0,
-            'energy_kwh': 0.0,
-        })
-    
+
+        path_points.append(
+            {
+                "lat": lat,
+                "lon": lon,
+                "x_m": 0,
+                "y_m": 0,
+                "z_m": 0,
+                "elevation_m": 0,
+                "curvature": 0.0,
+                "distance_along_m": cumulative_distance,
+                "surface_type": "asphalt",
+                "speed_mps": 10.0,
+                "v_profile": 10.0,
+                "energy_joules": 0.0,
+                "energy_kwh": 0.0,
+            }
+        )
+
     return path_points
 
 
@@ -165,7 +167,9 @@ def create_lombard_path() -> List[Dict]:
     return path_points
 
 
-def _solve_with_core(path_points: List[Dict], vehicle_name: str, condition: str = "dry") -> None:
+def _solve_with_core(
+    path_points: List[Dict], vehicle_name: str, condition: str = "dry"
+) -> None:
     """
     Solve Lombard using the C++ core via the stable Python API.
 
@@ -192,7 +196,9 @@ def _solve_with_core(path_points: List[Dict], vehicle_name: str, condition: str 
         )
         surfaces.append(pt.get("surface_type", "asphalt"))
 
-    result = av.solve(path=coords, surfaces=surfaces, vehicle=vehicle_name, condition=condition)
+    result = av.solve(
+        path=coords, surfaces=surfaces, vehicle=vehicle_name, condition=condition
+    )
 
     vp = result.velocity_profile_mps or []
     ej = result.energy_joules or []
@@ -207,7 +213,8 @@ def _solve_with_core(path_points: List[Dict], vehicle_name: str, condition: str 
 
 
 def run_demo():
-    print("""
+    print(
+        """
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
 ║   🌁  SAN FRANCISCO HILL CLIMB ENERGY BENCHMARK  🌁                 ║
@@ -217,10 +224,13 @@ def run_demo():
 ║   Location: Lombard Street (The Crookedest Street), San Francisco    ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
-""")
-    
+"""
+    )
+
     # Check for Mapbox token
-    mapbox_token = os.environ.get('MAPBOX_API_KEY') or os.environ.get('MAPBOX_ACCESS_TOKEN')
+    mapbox_token = os.environ.get("MAPBOX_API_KEY") or os.environ.get(
+        "MAPBOX_ACCESS_TOKEN"
+    )
     if mapbox_token:
         map_style = "satellite"
         print("🛰️  Using satellite map (MAPBOX_API_KEY detected)")
@@ -228,75 +238,75 @@ def run_demo():
         map_style = "dark"
         print("🌙 Using dark map style (no API key needed)")
     print()
-    
+
     # Vehicle parameters
     vehicle = {
-        'name': 'Tesla Model 3',
-        'mass_kg': 1847,
-        'drag_coeff': 0.23,
-        'frontal_area': 2.22,
-        'rolling_res': 0.012,
+        "name": "Tesla Model 3",
+        "mass_kg": 1847,
+        "drag_coeff": 0.23,
+        "frontal_area": 2.22,
+        "rolling_res": 0.012,
     }
-    
+
     print(f"Vehicle: {vehicle['name']}")
     print(f"  Mass: {vehicle['mass_kg']} kg")
     print(f"  Cd: {vehicle['drag_coeff']}, A: {vehicle['frontal_area']} m²")
     print()
-    
+
     # Create path with smoothing
     print("Loading Lombard Street crooked section...")
     path_points_up = create_lombard_path()
-    
-    total_dist = path_points_up[-1]['distance_along_m']
-    
+
+    total_dist = path_points_up[-1]["distance_along_m"]
+
     print(f"  ✓ Waypoints: {len(path_points_up)}")
     print(f"  ✓ Distance: {total_dist:.0f} m")
     print(f"  ✓ 8 hairpin turns, 27% grade")
-    
+
     # Downhill path
     path_points_down = []
     reversed_pts = list(reversed(path_points_up))
     cumulative_dist = 0.0
-    
+
     for i, pt in enumerate(reversed_pts):
         new_pt = pt.copy()
         if i == 0:
-            new_pt['distance_along_m'] = 0
+            new_pt["distance_along_m"] = 0
         else:
             prev = reversed_pts[i - 1]
-            dx = (pt['lon'] - prev['lon']) * 111320 * math.cos(math.radians(pt['lat']))
-            dy = (pt['lat'] - prev['lat']) * 111320
-            cumulative_dist += math.sqrt(dx*dx + dy*dy)
-            new_pt['distance_along_m'] = cumulative_dist
+            dx = (pt["lon"] - prev["lon"]) * 111320 * math.cos(math.radians(pt["lat"]))
+            dy = (pt["lat"] - prev["lat"]) * 111320
+            cumulative_dist += math.sqrt(dx * dx + dy * dy)
+            new_pt["distance_along_m"] = cumulative_dist
         path_points_down.append(new_pt)
-    
+
     # Solve using the core solver for both directions
     print()
     print("─" * 60)
     print("  UPHILL ANALYSIS")
     print("─" * 60)
-    
+
     _solve_with_core(path_points_up, vehicle_name="tesla_model_3", condition="dry")
-    uphill_energy = path_points_up[-1]['energy_kwh']
-    uphill_max_speed = max(pt['speed_mps'] for pt in path_points_up) * 3.6
-    uphill_min_speed = min(pt['speed_mps'] for pt in path_points_up) * 3.6
-    
+    uphill_energy = path_points_up[-1]["energy_kwh"]
+    uphill_max_speed = max(pt["speed_mps"] for pt in path_points_up) * 3.6
+    uphill_min_speed = min(pt["speed_mps"] for pt in path_points_up) * 3.6
+
     print(f"  Max speed:     {uphill_max_speed:.1f} km/h")
     print(f"  Min speed:     {uphill_min_speed:.1f} km/h (hairpins)")
     print(f"  Total energy:  {uphill_energy:.4f} kWh")
-    
+
     print()
     print("─" * 60)
-    print("  DOWNHILL ANALYSIS")  
+    print("  DOWNHILL ANALYSIS")
     print("─" * 60)
-    
+
     _solve_with_core(path_points_down, vehicle_name="tesla_model_3", condition="dry")
-    downhill_energy = path_points_down[-1]['energy_kwh']
-    
+    downhill_energy = path_points_down[-1]["energy_kwh"]
+
     print(f"  Max speed:     {uphill_max_speed:.1f} km/h")
     print(f"  Min speed:     {uphill_min_speed:.1f} km/h (hairpins)")
     print(f"  Total energy:  {downhill_energy:.4f} kWh (regen possible)")
-    
+
     # Results
     print()
     print("═" * 60)
@@ -304,63 +314,69 @@ def run_demo():
     print("═" * 60)
     print(f"\n  Uphill:   {uphill_energy:.4f} kWh")
     print(f"  Downhill: {downhill_energy:.4f} kWh")
-    
+
     passed = uphill_energy > downhill_energy
     if passed:
-        print(f"\n  ✓ PASS: Uphill > Downhill (ratio: {uphill_energy/max(downhill_energy, 0.001):.1f}x)")
+        print(
+            f"\n  ✓ PASS: Uphill > Downhill (ratio: {uphill_energy/max(downhill_energy, 0.001):.1f}x)"
+        )
     else:
         print(f"\n  ✗ FAIL: Expected uphill > downhill")
-    
+
     # Rich Analysis
     print()
     print("─" * 60)
     print("  RICH FEATURE ANALYSIS")
     print("─" * 60)
-    
+
     try:
         from apexvelocity.viz import visualize_profile
         from apexvelocity.analysis import analyze_profile
-        
-        analysis = analyze_profile(path_points_up, condition="dry", vehicle_mass_kg=vehicle['mass_kg'])
+
+        analysis = analyze_profile(
+            path_points_up, condition="dry", vehicle_mass_kg=vehicle["mass_kg"]
+        )
         s = analysis.get_summary_dict()
-        
+
         print(f"\n  === Dynamics ===")
-        print(f"  Max Lateral G:      {s['max_lateral_g']:.2f} g (p95: {s['p95_lateral_g']:.2f} g)")
+        print(
+            f"  Max Lateral G:      {s['max_lateral_g']:.2f} g (p95: {s['p95_lateral_g']:.2f} g)"
+        )
         print(f"  Max Long G:         {s['max_longitudinal_g']:.2f} g")
         print(f"  p95 Long Jerk:      {s['p95_longitudinal_jerk']:.1f} m/s³")
         print(f"  p95 Lat Jerk:       {s['p95_lateral_jerk']:.1f} m/s³")
-        
+
         print(f"\n  === Friction ===")
         print(f"  Max Friction Use:   {s['max_friction_usage']*100:.0f}%")
         print(f"  Avg Friction Use:   {s['avg_friction_usage']*100:.0f}%")
         print(f"  p95 Friction Use:   {s['p95_friction_usage']*100:.0f}%")
-        
+
         print(f"\n  === Comfort ===")
         print(f"  Avg Comfort Score:  {s['avg_comfort_score']:.2f}")
         print(f"  Violations/km:      {s['comfort_violations_per_km']:.2f}")
         print(f"  Uncomfortable:      {s['pct_uncomfortable']:.1f}%")
-        
+
         print(f"\n  === Actions ===")
         print(f"  Brake Zones:        {s['brake_fraction']*100:.1f}%")
         print(f"  Coast Zones:        {s['coast_fraction']*100:.1f}%")
         print(f"  Accel Zones:        {s['accelerate_fraction']*100:.1f}%")
-        
+
         print(f"\n  === Composite Scores ===")
         print(f"  Difficulty:         {s['difficulty_score']:.2f}")
         print(f"  Safety Margin:      {s['safety_margin_score']:.2f}")
-        
+
         print()
         print("─" * 60)
         print("  VISUALIZATION")
         print("─" * 60)
-        
+
         # Try to use the new interactive visualization with Mapbox
         try:
             from apexvelocity.viz import visualize_profile_interactive
-            
+
             # Get Mapbox token from environment
-            mapbox_token = os.environ.get('MAPBOX_API_KEY', '')
-            
+            mapbox_token = os.environ.get("MAPBOX_API_KEY", "")
+
             visualize_profile_interactive(
                 path_points_up,
                 title="Lombard Street Hill Climb",
@@ -373,7 +389,7 @@ def run_demo():
             print(f"    🎛️  Interactive dropdown to switch color modes!")
             print(f"    🛰️  {'Satellite' if mapbox_token else 'Dark'} basemap")
             print(f"    Hover for full segment features!")
-            
+
         except Exception as e:
             print(f"  ⚠ Interactive viz failed ({e}), falling back to basic")
             # Fallback to basic visualization
@@ -382,22 +398,23 @@ def run_demo():
                 color_by="comfort",
                 title="Lombard Street - Comfort Analysis",
                 output_html="sf_hill_climb.html",
-                style=map_style
+                style=map_style,
             )
             print(f"\n  ✓ Generated: sf_hill_climb.html (basic)")
             print(f"    Color by: comfort (green=comfortable, red=uncomfortable)")
-        
+
     except Exception as e:
         print(f"\n  ⚠ Visualization error: {e}")
         import traceback
+
         traceback.print_exc()
-    
+
     print()
     print("═" * 60)
     print("  Demo complete!")
     print("═" * 60)
     print()
-    
+
     return 0 if passed else 1
 
 
