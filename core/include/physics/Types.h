@@ -10,7 +10,7 @@ namespace physics {
 
 /**
  * @brief Vehicle physical parameters for dynamics calculations.
- * 
+ *
  * These parameters define the kinematic and dynamic properties of a vehicle
  * used for velocity profiling and energy consumption calculations.
  */
@@ -25,9 +25,13 @@ struct VehicleParams {
     double powertrain_efficiency = 0.90;  ///< Powertrain efficiency 0-1
     double track_width_m = 1.6;           ///< Track width (wheel to wheel) in m
     double cog_height_m = 0.5;            ///< Center of gravity height in m
-    
+
+    // Approximate dynamic geometry for bicycle model
+    double wheelbase_m = 2.7;             ///< Wheelbase (m)
+    double front_weight_fraction = 0.5;   ///< Static front axle weight fraction [0,1]
+
     std::string name = "default";         ///< Vehicle name/identifier
-    
+
     /**
      * @brief Validate that all parameters are within reasonable bounds.
      * @return true if valid, false otherwise.
@@ -42,7 +46,9 @@ struct VehicleParams {
                max_power_w > 0.0 &&
                powertrain_efficiency > 0.0 && powertrain_efficiency <= 1.0 &&
                track_width_m > 0.0 &&
-               cog_height_m > 0.0;
+               cog_height_m > 0.0 &&
+               wheelbase_m > 0.0 &&
+               front_weight_fraction > 0.0 && front_weight_fraction < 1.0;
     }
 };
 
@@ -108,6 +114,14 @@ struct PathPoint {
 using Path = std::vector<PathPoint>;
 
 /**
+ * @brief Physics model selection for the solver.
+ */
+enum class PhysicsModel {
+    KINEMATIC = 0,   ///< Original kinematic model (friction + rollover limits)
+    DYNAMIC         ///< Experimental dynamic model (tire slip, weight transfer)
+};
+
+/**
  * @brief Solver configuration options.
  */
 struct SolverConfig {
@@ -117,6 +131,11 @@ struct SolverConfig {
     double min_speed_mps = 1.0;           ///< Minimum speed for calculations (avoid div by zero)
     double initial_speed_mps = 0.0;       ///< Initial speed at path start
     double final_speed_mps = 0.0;         ///< Target final speed at path end
+
+    // Advanced model controls
+    PhysicsModel model = PhysicsModel::KINEMATIC;
+    bool enable_tire_slip = false;        ///< Enable tire slip (Pacejka) effects
+    bool enable_weight_transfer = false;  ///< Enable simple weight transfer model
 };
 
 /**

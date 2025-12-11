@@ -445,6 +445,28 @@ F_grade = m · g · sin(θ)
 2. **Backward Pass**: Propagate braking constraints from end to start
 3. **Forward Pass**: Propagate acceleration constraints from start to end
 
+### Advanced Dynamics (Experimental)
+
+For research scenarios you can enable an **experimental dynamic vehicle model**:
+
+- The core C++ solver supports a `PhysicsModel` enum in `SolverConfig`:
+  - `KINEMATIC` (default): original 3-pass curvature+friction+rollover solver.
+  - `DYNAMIC`: single-track (bicycle) model with:
+    - Pacejka-style tire forces (lateral + longitudinal).
+    - Simple longitudinal weight transfer using `cog_height_m` and `wheelbase_m`.
+    - First-order actuator lag on steering and throttle/brake.
+- In C++ you can opt in via:
+
+  ```cpp
+  apex::physics::SolverConfig cfg;
+  cfg.model = apex::physics::PhysicsModel::DYNAMIC;
+  ```
+
+When `DYNAMIC` is selected, the solver integrates a `DynamicVehicle` along the path
+using the same material μ values from `config/materials.json`, then computes energy
+on top of the dynamic velocity profile. This mode is **experimental** and intended
+for validation and “what-if” studies rather than strict real-time control.
+
 ### Uncertainty Quantification (Research)
 
 For research workflows you can attach **confidence intervals** around the physics-based speed profile:

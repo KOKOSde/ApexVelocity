@@ -4,6 +4,10 @@
 #include <cmath>
 #include <limits>
 
+#include "physics/DynamicVehicle.h"
+#include "physics/TireModel.h"
+#include <limits>
+
 namespace apex {
 namespace physics {
 
@@ -19,64 +23,147 @@ SolverResult VelocityProfileSolver::solve(Path& path) {
 
 SolverResult VelocityProfileSolver::solve(Path& path, const ConfigManager& config_mgr) {
     SolverResult result;
-    
+
     // Validate input
     if (path.size() < 2) {
         result.success = false;
         result.error_message = "Path must have at least 2 points";
         return result;
     }
-    
+
     if (!vehicle_.is_valid()) {
         result.success = false;
         result.error_message = "Invalid vehicle parameters";
         return result;
     }
-    
+
     // Get gravity from config
     double gravity = config_mgr.get_sim_param_or<double>("gravity", PhysicsConstants::EARTH_GRAVITY);
-    
-    // Pass 0: Static limits
+
+    // Pass 0: Static limits (used by both kinematic and dynamic modes)
     compute_static_limits(path, config_mgr);
     if (progress_callback_) progress_callback_(0, 1.0);
-    
+
+    // Optional: experimental dynamic model instead of 3-pass kinematic solver.
+    if (config_.model == PhysicsModel::DYNAMIC) {
+        // Simple dynamic integration using a bicycle model with Pacejka tires.
+        PacejkaTireParams tire_lat;
+        PacejkaTireParams tire_long;
+        DynamicVehicle dyn_vehicle(vehicle_, tire_lat, tire_long, gravity);
+
+        DynamicVehicleState state{};
+        state.x_m = path.front().x_m;
+        state.y_m = path.front().y_m;
+        state.yaw_rad = 0.0;
+        state.vx_mps = std::max(config_.initial_speed_mps, config_.min_speed_mps);
+
+        double sum_speed = 0.0;
+        double max_speed = 0.0;
+        double min_speed = std::numeric_limits<double>::max();
+
+        for (std::size_t i = 0; i + 1 < path.size(); ++i) {
+            auto& pt = path[i];
+            auto& next = path[i + 1];
+
+            const double ds = pt.distance_to_2d(next);
+            if (ds <= 0.0) {
+                continue;
+            }
+
+            double mu = config_mgr.get_effective_mu(pt.surface_type, config_.condition);
+            const double v_static = pt.v_static;
+
+            // Target speed: respect static limit but avoid zero targets.
+            const double target_speed = std::max(v_static, config_.min_speed_mps);
+
+            // Simple proportional controller on speed for throttle/brake.
+            const double speed_error = target_speed - state.vx_mps;
+            double throttle_cmd = 0.0;
+            const double kp_throttle = 0.05;
+            if (std::abs(speed_error) > 0.5) {
+                throttle_cmd = std::clamp(kp_throttle * speed_error, -1.0, 1.0);
+            }
+
+            // Steering: small-angle approximation based on curvature.
+            double steer_cmd = pt.curvature * vehicle_.wheelbase_m;
+            steer_cmd = std::clamp(steer_cmd, -0.5, 0.5);  // ~±30 degrees
+
+            const double vx_safe = std::max(state.vx_mps, config_.min_speed_mps);
+            const double dt = ds / vx_safe;
+
+            state = dyn_vehicle.step(state, steer_cmd, throttle_cmd, mu, dt);
+
+            next.v_profile = std::max(state.vx_mps, 0.0);
+
+            sum_speed += next.v_profile;
+            max_speed = std::max(max_speed, next.v_profile);
+            min_speed = std::min(min_speed, next.v_profile);
+        }
+
+        // Compute energy based on dynamic v_profile.
+        compute_energy(path, config_mgr);
+        if (progress_callback_) progress_callback_(3, 1.0);
+
+        result.success = true;
+        result.points_processed = path.size();
+        result.total_distance_m = path.back().distance_along_m - path.front().distance_along_m;
+
+        if (!path.empty()) {
+            result.total_energy_joules = path.back().energy_joules;
+
+            // Average speed over segments where we integrated dynamics.
+            if (path.size() > 1) {
+                result.avg_speed_mps = sum_speed / static_cast<double>(path.size() - 1);
+            }
+            result.max_speed_mps = max_speed;
+            result.min_speed_mps = (min_speed == std::numeric_limits<double>::max()) ? 0.0 : min_speed;
+
+            if (result.total_distance_m > 0) {
+                result.energy_per_meter = result.total_energy_joules / result.total_distance_m;
+            }
+        }
+
+        return result;
+    }
+
+    // Default: original 3-pass kinematic solver.
     // Pass 1: Backward pass (braking)
     backward_pass(path, gravity);
     if (progress_callback_) progress_callback_(1, 1.0);
-    
+
     // Pass 2: Forward pass (acceleration)
     forward_pass(path, gravity);
     if (progress_callback_) progress_callback_(2, 1.0);
-    
+
     // Compute energy
     compute_energy(path, config_mgr);
     if (progress_callback_) progress_callback_(3, 1.0);
-    
+
     // Compute statistics
     result.success = true;
     result.points_processed = path.size();
     result.total_distance_m = path.back().distance_along_m - path.front().distance_along_m;
-    
+
     if (!path.empty()) {
         result.total_energy_joules = path.back().energy_joules;
-        
+
         double sum_speed = 0.0;
         result.max_speed_mps = 0.0;
         result.min_speed_mps = std::numeric_limits<double>::max();
-        
+
         for (const auto& pt : path) {
             sum_speed += pt.v_profile;
             result.max_speed_mps = std::max(result.max_speed_mps, pt.v_profile);
             result.min_speed_mps = std::min(result.min_speed_mps, pt.v_profile);
         }
-        
+
         result.avg_speed_mps = sum_speed / path.size();
-        
+
         if (result.total_distance_m > 0) {
             result.energy_per_meter = result.total_energy_joules / result.total_distance_m;
         }
     }
-    
+
     return result;
 }
 

@@ -56,6 +56,8 @@ set(APEXVELOCITY_SOURCES
     src/utils/ConfigManager.cpp
     src/physics/PhysicsMath.cpp
     src/physics/VehicleLoader.cpp
+    src/physics/TireModel.cpp
+    src/physics/DynamicVehicle.cpp
     src/physics/VelocityProfileSolver.cpp
     src/capi/apex_c_api.cpp
 )
@@ -65,6 +67,8 @@ set(APEXVELOCITY_HEADERS
     include/physics/PhysicsMath.h
     include/physics/Types.h
     include/physics/VehicleLoader.h
+    include/physics/TireModel.h
+    include/physics/DynamicVehicle.h
     include/physics/VelocityProfileSolver.h
     include/capi/apex_c_api.h
 )
